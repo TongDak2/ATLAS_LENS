@@ -71,7 +71,12 @@ function CommandPanel({ onRun, loading }: { onRun: (q: string, apiKey: string) =
     <div className="section-index">00</div>
     <div className="command-copy">
       <h2>Mission first. Evidence next.</h2>
-      <p>사이트·이메일·IP를 입력하면 CTI 조회, Mission GO/NO-GO, 72시간 조치 계획으로 정리합니다. GO/NO-GO는 진행·조건부 진행·중단을 evidence 기준으로 가르는 결정 게이트입니다.</p>
+      <p>사이트·이메일·IP를 입력하면 CTI 조회, Mission GO/NO-GO, 72시간 조치 계획으로 정리합니다.</p>
+      <div className="gate-legend">
+        <div><strong>GO</strong><span>외부 노출 신호가 없거나 낮아 기본 로그 확인 후 진행 가능한 상태</span></div>
+        <div><strong>GO WITH CONTROLS</strong><span>유출·감염·언급 신호가 있으나 MFA, 세션 폐기, watchlist 등으로 완화 가능한 상태</span></div>
+        <div><strong>NO-GO</strong><span>유효 계정 노출, 감염 단말, 랜섬웨어 주장처럼 임무 영향 evidence가 확인된 상태</span></div>
+      </div>
     </div>
     <div className="command-form">
       <label>Mission query</label>
