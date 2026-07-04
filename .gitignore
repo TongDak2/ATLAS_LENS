@@ -1,0 +1,32 @@
+# secrets
+.env
+.env.*
+!.env.example
+.stealthmole/
+*.key
+*.pem
+*.p12
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+
+# node
+node_modules/
+dist/
+build/
+.next/
+.vite/
+
+# local runtime
+data/*.db
+data/*.sqlite
+logs/
+exports/
+.DS_Store
+
+# build cache
+*.tsbuildinfo
