@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { AlertTriangle, ArrowRight, CheckCircle2, Clock, Database, ExternalLink, FileText, GitBranch, Globe2, KeyRound, ListChecks, ShieldCheck, Target } from 'lucide-react'
+import { AlertTriangle, ArrowRight, CheckCircle2, Clock, Database, ExternalLink, FileText, GitBranch, Globe2, KeyRound, ListChecks, ShieldCheck } from 'lucide-react'
 import { investigate } from './lib/api'
 import type { ActionItem, Evidence, InvestigationResult, Severity } from './types/atlas'
 import './styles/global.css'
@@ -71,7 +71,7 @@ function CommandPanel({ onRun, loading }: { onRun: (q: string, apiKey: string) =
     <div className="section-index">00</div>
     <div className="command-copy">
       <h2>Mission first. Evidence next.</h2>
-      <p>사이트·이메일·IP를 입력하면 CTI 조회, Mission GO/NO-GO, 72시간 조치 계획으로 정리합니다.</p>
+      <p>사이트·이메일·IP를 입력하면 CTI 조회, Mission GO/NO-GO, 72시간 조치 계획으로 정리합니다. GO/NO-GO는 진행·조건부 진행·중단을 evidence 기준으로 가르는 결정 게이트입니다.</p>
     </div>
     <div className="command-form">
       <label>Mission query</label>
@@ -105,20 +105,6 @@ function DecisionGate({ result }: { result: InvestigationResult }) {
   </section>
 }
 
-function MissionContext({ result }: { result: InvestigationResult }) {
-  const m = result.mission_context
-  return <section className="panel context-panel">
-    <div className="panel-index">03</div>
-    <div className="panel-header"><h2><Target size={18}/> Mission context</h2></div>
-    <dl className="context-grid">
-      <dt>Type</dt><dd>{m.mission_type}</dd>
-      <dt>Target</dt><dd>{m.target}</dd>
-      <dt>Mission</dt><dd title={m.mission_event}>{shortText(m.mission_event, 120)}</dd>
-      <dt>Deadline</dt><dd>{m.deadline}</dd>
-    </dl>
-  </section>
-}
-
 function TargetSurface({ result }: { result: InvestigationResult }) {
   const p = result.target_profile
   const s = p.public_surface || {}
@@ -127,7 +113,7 @@ function TargetSurface({ result }: { result: InvestigationResult }) {
   const title = typeof s.title === 'string' && s.title ? s.title : 'not available'
   const ipCount = typeof s.resolved_address_count === 'number' ? String(s.resolved_address_count) : '0'
   return <section className="panel surface-panel">
-    <div className="panel-index">04</div>
+    <div className="panel-index">03</div>
     <div className="panel-header"><h2><Globe2 size={18}/> Target surface</h2></div>
     <dl className="context-grid">
       <dt>Target</dt><dd>{p.display || p.value}</dd>
@@ -146,7 +132,7 @@ function TargetSurface({ result }: { result: InvestigationResult }) {
 
 function ExecutiveBrief({ result }: { result: InvestigationResult }) {
   return <section className="panel brief-panel">
-    <div className="panel-index">05</div>
+    <div className="panel-index">04</div>
     <div className="panel-header"><h2><FileText size={18}/> Executive brief</h2></div>
     <p className="brief-text">{result.report.executive_summary}</p>
     <ul className="brief-list">{result.report.key_findings.slice(0, 3).map((x, i) => <li key={i}>{shortText(x, 150)}</li>)}</ul>
@@ -155,7 +141,7 @@ function ExecutiveBrief({ result }: { result: InvestigationResult }) {
 
 function SourceStatus({ result }: { result: InvestigationResult }) {
   return <section className="panel source-panel">
-    <div className="panel-index">06</div>
+    <div className="panel-index">05</div>
     <div className="panel-header"><h2><Database size={18}/> Source status</h2></div>
     <div className="source-grid">
       {result.plan.map(p => <div className="source-card" key={p.id}>
@@ -170,7 +156,7 @@ function SourceStatus({ result }: { result: InvestigationResult }) {
 function MilitaryDeployability({ result }: { result: InvestigationResult }) {
   const d = result.deployability
   return <section className="panel deploy-panel">
-    <div className="panel-index">07</div>
+    <div className="panel-index">06</div>
     <div className="panel-header"><h2><ShieldCheck size={18}/> Military deployability</h2></div>
     <div className="deploy-grid">
       <div><strong>Deployment locations</strong><ul>{d.deployment_locations.slice(0, 3).map((x, i) => <li key={i}>{shortText(x, 96)}</li>)}</ul></div>
@@ -185,7 +171,7 @@ function StandardsPanel({ result }: { result: InvestigationResult }) {
   const s = result.standards
   const objectCount = Array.isArray(s.stix_bundle?.objects) ? s.stix_bundle.objects.length : 0
   return <section className="panel standards-panel">
-    <div className="panel-index">08</div>
+    <div className="panel-index">07</div>
     <div className="panel-header"><h2><GitBranch size={18}/> Standards interoperability</h2></div>
     <div className="standards-summary">
       <div><span>MITRE ATT&CK</span><strong>{s.attack_mappings.length}</strong></div>
@@ -203,7 +189,7 @@ function StandardsPanel({ result }: { result: InvestigationResult }) {
 
 function ActionBoard({ actions, selected, onSelect }: { actions: ActionItem[]; selected?: ActionItem; onSelect: (a: ActionItem) => void }) {
   return <section className="panel action-panel">
-    <div className="panel-index">09</div>
+    <div className="panel-index">08</div>
     <div className="panel-header"><h2><ListChecks size={18}/> 72-hour mission assurance board</h2></div>
     <div className="action-list">
       {actions.map(a => <button key={a.id} className={selected?.id === a.id ? 'action-row selected' : 'action-row'} onClick={() => onSelect(a)}>
@@ -218,7 +204,7 @@ function ActionBoard({ actions, selected, onSelect }: { actions: ActionItem[]; s
 
 function EvidenceTable({ evidence, selected, onSelect }: { evidence: Evidence[]; selected?: Evidence; onSelect: (ev: Evidence) => void }) {
   return <section className="panel evidence-panel">
-    <div className="panel-index">10</div>
+    <div className="panel-index">09</div>
     <div className="panel-header"><h2><ShieldCheck size={18}/> Evidence matrix</h2></div>
     {evidence.length ? <div className="table-scroll"><table className="matrix"><thead><tr><th>ID</th><th>Source</th><th>Finding</th><th>Severity</th><th>Time</th><th>Link</th></tr></thead><tbody>{evidence.map(ev => <tr key={ev.id} onClick={() => onSelect(ev)} className={selected?.id === ev.id ? 'selected-row' : ''}><td><strong>{ev.citation}</strong></td><td>{ev.source}<br/><span>{ev.module}</span></td><td><strong>{ev.title}</strong><br/><span title={ev.summary}>{shortText(ev.summary, 130)}</span></td><td><span className={severityClass(ev.severity)}>{ev.severity}</span></td><td>{fmtDate(ev.event_time)}</td><td>{proofUrl(ev) ? <a onClick={e => e.stopPropagation()} href={proofUrl(ev)} target="_blank" rel="noreferrer"><ExternalLink size={15}/></a> : '-'}</td></tr>)}</tbody></table></div> : <div className="empty-state">정규화된 외부 evidence 없음. 내부 로그 검증을 조건으로 검토하세요.</div>}
   </section>
@@ -226,7 +212,7 @@ function EvidenceTable({ evidence, selected, onSelect }: { evidence: Evidence[];
 
 function DetailPanel({ detail }: { detail: Detail }) {
   return <section className="panel detail-panel">
-    <div className="panel-index">11</div>
+    <div className="panel-index">10</div>
     <div className="panel-header"><h2><FileText size={18}/> Detail</h2></div>
     {!detail ? <div className="empty-state">Evidence 또는 action 행을 선택하세요.</div> : detail.kind === 'evidence' ? <EvidenceDetail ev={detail.item}/> : <ActionDetail action={detail.item}/>}
   </section>
@@ -342,7 +328,7 @@ function GraphPanel({ result }: { result: InvestigationResult }) {
 
 function Timeline({ result }: { result: InvestigationResult }) {
   return <section className="panel timeline-panel">
-    <div className="panel-index">12</div>
+    <div className="panel-index">11</div>
     <div className="panel-header"><h2><Clock size={18}/> Timeline</h2></div>
     {result.timeline.length ? <div className="timeline-list">{result.timeline.map(t => <div className="time-item" key={t.id}><time>{fmtDate(t.time)}</time><strong>{t.title}</strong><p>{t.summary}</p></div>)}</div> : <div className="empty-state">시간 정보가 있는 이벤트가 없습니다.</div>}
   </section>
@@ -350,7 +336,7 @@ function Timeline({ result }: { result: InvestigationResult }) {
 
 function ControlsPanel({ result }: { result: InvestigationResult }) {
   return <section className="panel controls-panel">
-    <div className="panel-index">13</div>
+    <div className="panel-index">12</div>
     <div className="panel-header"><h2><CheckCircle2 size={18}/> Required controls</h2></div>
     <ul className="control-list">{result.decision_gate.required_controls.map((c, i) => <li key={i}><ArrowRight size={15}/>{c}</li>)}</ul>
   </section>
@@ -370,7 +356,7 @@ function App() {
   const selectedEvidence = detail?.kind === 'evidence' ? detail.item : undefined
   const selectedAction = detail?.kind === 'action' ? detail.item : undefined
 
-  return <div className="app"><Topbar/><CommandPanel onRun={run} loading={loading}/>{error && <div className="error">{error}</div>}{!result && !loading && <div className="start-state">실제 사이트 주소를 입력하세요. 예: defense-supplier.co.kr — 사이트 주소만 입력하면 기본 연합훈련 전 Mission Exposure Gate로 자동 확장됩니다.</div>}{result && <main className="result-grid"><DecisionGate result={result}/><GraphPanel result={result}/><MissionContext result={result}/><TargetSurface result={result}/><ExecutiveBrief result={result}/><SourceStatus result={result}/><MilitaryDeployability result={result}/><StandardsPanel result={result}/><ActionBoard actions={result.action_board} selected={selectedAction} onSelect={item => setDetail({kind:'action', item})}/><EvidenceTable evidence={result.evidence} selected={selectedEvidence} onSelect={item => setDetail({kind:'evidence', item})}/><DetailPanel detail={detail}/><Timeline result={result}/><ControlsPanel result={result}/></main>}</div>
+  return <div className="app"><Topbar/><CommandPanel onRun={run} loading={loading}/>{error && <div className="error">{error}</div>}{!result && !loading && <div className="start-state">실제 사이트 주소를 입력하세요. 예: defense-supplier.co.kr — 사이트 주소만 입력하면 기본 연합훈련 전 Mission Exposure Gate로 자동 확장됩니다.</div>}{result && <main className="result-grid"><DecisionGate result={result}/><GraphPanel result={result}/><TargetSurface result={result}/><ExecutiveBrief result={result}/><SourceStatus result={result}/><MilitaryDeployability result={result}/><StandardsPanel result={result}/><ActionBoard actions={result.action_board} selected={selectedAction} onSelect={item => setDetail({kind:'action', item})}/><EvidenceTable evidence={result.evidence} selected={selectedEvidence} onSelect={item => setDetail({kind:'evidence', item})}/><DetailPanel detail={detail}/><Timeline result={result}/><ControlsPanel result={result}/></main>}</div>
 }
 
 createRoot(document.getElementById('root')!).render(<App />)
