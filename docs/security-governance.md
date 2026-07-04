@@ -22,20 +22,26 @@ Atlas Lens does not:
 
 2. **Request bounds and rate limiting**
    - query, classification, time window, and per-source limit are bounded at the Pydantic model layer.
+   - request body size is capped before business logic runs.
    - direct deployments use a small in-process rate limiter; production should add gateway/proxy rate limits.
 
 3. **Redaction by default**
-   - password, token, secret, cookie, and credential-like values are masked.
+   - password, token, secret, cookie, session, API key, bearer, and credential-like values are masked.
 
-4. **Evidence-first output**
+4. **Network exposure guardrails**
+   - trusted host checks are enabled via `ATLAS_ALLOWED_HOSTS`.
+   - CORS uses an explicit allowlist instead of a wildcard.
+   - public website context collection follows redirects manually and rejects non-public or non-HTTP(S) redirect targets.
+
+5. **Evidence-first output**
    - mission gates, action items, and briefs cite evidence IDs when evidence exists.
    - lack of external evidence is treated as an uncertainty, not proof of safety.
 
-5. **Untrusted external content**
+6. **Untrusted external content**
    - OSINT text is treated as data, never instructions.
    - this reduces prompt-injection risk in LLM-enabled versions.
 
-6. **Auditability**
+7. **Auditability**
    - recommended operational deployment should log:
      - query
      - authenticated caller

@@ -28,8 +28,8 @@ def date_like_to_iso(value: str) -> str | None:
         try:
             d = datetime.strptime(v, fmt)
             return d.replace(tzinfo=timezone.utc).isoformat()
-        except Exception:
-            pass
+        except ValueError:
+            continue
     return v if v else None
 
 

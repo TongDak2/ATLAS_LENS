@@ -4,6 +4,7 @@ import ipaddress
 import re
 import socket
 from typing import Any
+from urllib.parse import urljoin, urlparse
 
 import requests
 
@@ -146,8 +147,58 @@ def _fetch_landing_page(domain: str, timeout: float) -> dict[str, Any]:
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     }
     for url in candidates:
+        result = _fetch_safe_url(url, headers=headers, timeout=timeout)
+        if result.get("ok") or result.get("status_code"):
+            return result
+        last_error = str(result.get("error") or "")
+    return {
+        "http_checked": True,
+        "checked_url": candidates[0],
+        "ok": False,
+        "error": last_error or "no HTTP response",
+    }
+
+
+def _fetch_safe_url(url: str, *, headers: dict[str, str], timeout: float, max_redirects: int = 3) -> dict[str, Any]:
+    """Fetch one public HTTP(S) URL while guarding against SSRF-style redirects.
+
+    The public surface collector is intentionally lightweight, but redirects can
+    otherwise pivot a harmless public domain request to localhost, link-local, or
+    private addresses. Before every request we resolve the host and require at
+    least one globally routable IP address. Redirects are followed manually with
+    the same check on each hop.
+    """
+    current = url
+    redirects: list[dict[str, Any]] = []
+    for _ in range(max_redirects + 1):
+        if not _is_safe_http_url(current):
+            return {
+                "http_checked": True,
+                "checked_url": url,
+                "final_url": current,
+                "ok": False,
+                "redirects": redirects,
+                "error": "unsafe or non-public redirect target",
+            }
         try:
-            resp = requests.get(url, headers=headers, allow_redirects=True, timeout=timeout, stream=True)
+            resp = requests.get(current, headers=headers, allow_redirects=False, timeout=timeout, stream=True)
+            if resp.is_redirect:
+                location = resp.headers.get("Location", "")
+                if not location:
+                    return {
+                        "http_checked": True,
+                        "checked_url": url,
+                        "final_url": current,
+                        "ok": False,
+                        "status_code": resp.status_code,
+                        "redirects": redirects,
+                        "error": "redirect without Location header",
+                    }
+                next_url = urljoin(current, location)
+                redirects.append({"from": current, "to": next_url, "status_code": resp.status_code})
+                current = next_url
+                continue
+
             body = resp.raw.read(192_000, decode_content=True)
             text = body.decode(resp.encoding or "utf-8", errors="ignore")
             return {
@@ -156,18 +207,37 @@ def _fetch_landing_page(domain: str, timeout: float) -> dict[str, Any]:
                 "ok": bool(resp.ok),
                 "status_code": resp.status_code,
                 "final_url": resp.url,
+                "redirects": redirects,
                 "content_type": resp.headers.get("Content-Type", "")[:120],
                 "server": resp.headers.get("Server", "")[:120],
                 "title": _extract_title(text),
             }
-        except Exception as exc:
-            last_error = f"{type(exc).__name__}: {exc}"
+        except requests.RequestException as exc:
+            return {
+                "http_checked": True,
+                "checked_url": url,
+                "final_url": current,
+                "ok": False,
+                "redirects": redirects,
+                "error": f"{type(exc).__name__}: {exc}",
+            }
     return {
         "http_checked": True,
-        "checked_url": candidates[0],
+        "checked_url": url,
+        "final_url": current,
         "ok": False,
-        "error": last_error or "no HTTP response",
+        "redirects": redirects,
+        "error": "too many redirects",
     }
+
+
+def _is_safe_http_url(url: str) -> bool:
+    parsed = urlparse(url)
+    if parsed.scheme not in {"http", "https"}:
+        return False
+    if not parsed.hostname:
+        return False
+    return bool(_resolve_public_addresses(parsed.hostname))
 
 
 def _extract_title(html: str) -> str:

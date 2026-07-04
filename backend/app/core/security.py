@@ -8,6 +8,11 @@ SENSITIVE_KEYS = {
     "password", "passwd", "pwd", "secret", "secret_key", "access_key", "authorization",
     "token", "jwt", "api_key", "apikey", "cookie", "session", "credential",
 }
+SENSITIVE_KEY_FRAGMENTS = (
+    "password", "passwd", "pwd", "secret", "token", "jwt", "api_key", "apikey",
+    "access_key", "authorization", "cookie", "session", "credential", "private_key",
+    "refresh", "bearer", "client_secret",
+)
 
 EMAIL_RE = re.compile(r"([A-Za-z0-9._%+-]{1,3})[A-Za-z0-9._%+-]*(@[A-Za-z0-9.-]+\.[A-Za-z]{2,})")
 
@@ -34,8 +39,7 @@ def redact(obj: Any) -> Any:
     if isinstance(obj, dict):
         out = {}
         for k, v in obj.items():
-            lk = str(k).lower()
-            if lk in SENSITIVE_KEYS or "password" in lk or "secret" in lk or "token" in lk:
+            if _is_sensitive_key(k):
                 out[k] = "<redacted>"
             elif isinstance(v, str):
                 out[k] = mask_email(v)
@@ -47,6 +51,11 @@ def redact(obj: Any) -> Any:
     if isinstance(obj, str):
         return mask_email(obj)
     return obj
+
+
+def _is_sensitive_key(key: Any) -> bool:
+    lk = str(key).lower()
+    return lk in SENSITIVE_KEYS or any(fragment in lk for fragment in SENSITIVE_KEY_FRAGMENTS)
 
 
 def safety_classification() -> dict[str, Any]:

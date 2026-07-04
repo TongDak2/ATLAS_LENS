@@ -46,7 +46,7 @@ function Topbar() {
 
 function CommandPanel({ onRun, loading }: { onRun: (q: string, apiKey: string) => void; loading: boolean }) {
   const [query, setQuery] = useState('')
-  const [apiKey, setApiKey] = useState(() => sessionStorage.getItem('atlas_api_key') || '')
+  const [apiKey, setApiKey] = useState('')
   const [validationMessage, setValidationMessage] = useState('')
   const effectiveQuery = query.trim()
 
@@ -59,7 +59,6 @@ function CommandPanel({ onRun, loading }: { onRun: (q: string, apiKey: string) =
       setValidationMessage('조사할 실제 사이트 주소, 도메인, 이메일 또는 IP를 포함해 주세요. 사이트 주소만 입력해도 기본 연합훈련 전 Mission Exposure Gate로 자동 확장됩니다. 예: defense-supplier.co.kr')
       return
     }
-    sessionStorage.setItem('atlas_api_key', apiKey.trim())
     setValidationMessage('')
     onRun(effectiveQuery, apiKey.trim())
   }
@@ -269,25 +268,32 @@ function MissionFlow({ result }: { result: InvestigationResult }) {
   const publicSurface = result.evidence.filter(ev => ev.evidence_type === 'public_indicator')
   const controls = result.action_board.slice(0, 3)
   const signalRows = Object.entries(grouped)
+  const decision = result.decision_gate.decision.replace(/_/g, ' ')
   return <div className="mission-flow-wrap">
     <p className="flow-caption">이 흐름도는 외부 CTI evidence가 임무 판단으로 바뀌는 경로를 보여줍니다. 왼쪽의 임무와 대상에서 시작해, 가운데의 actionable exposure가 오른쪽의 Mission Decision과 72시간 조치로 연결됩니다.</p>
+    <div className="flow-summary-strip">
+      <div><span>Mission type</span><strong>{result.mission_context.mission_type}</strong></div>
+      <div><span>Target</span><strong>{result.target_profile.display || result.target_profile.value || result.mission_context.target}</strong></div>
+      <div><span>Actionable evidence</span><strong>{actionable.length}</strong></div>
+      <div><span>Decision</span><strong>{decision}</strong></div>
+    </div>
     <div className="mission-flow">
       <article className="flow-stage">
-        <div className="flow-step">01</div>
+        <div className="flow-node"><b>01</b><span /></div>
         <span>Mission event</span>
         <strong>{result.mission_context.title}</strong>
         <p>{result.mission_context.mission_event}</p>
         <small>Deadline: {result.mission_context.deadline}</small>
       </article>
       <article className="flow-stage">
-        <div className="flow-step">02</div>
+        <div className="flow-node"><b>02</b><span /></div>
         <span>Target</span>
         <strong>{result.mission_context.target}</strong>
         <p>{result.target_profile.kind} · {result.target_profile.display || result.target_profile.value}</p>
         <small>{publicSurface.length ? 'Public surface context collected' : 'No public surface context'}</small>
       </article>
-      <article className="flow-stage exposure-stage">
-        <div className="flow-step">03</div>
+      <article className={actionable.length ? 'flow-stage exposure-stage' : 'flow-stage exposure-stage no-signal'}>
+        <div className="flow-node"><b>03</b><span /></div>
         <span>Exposure signals</span>
         <strong>{actionable.length} evidence</strong>
         <p>{sourceCount} CTI source{sourceCount === 1 ? '' : 's'} affected the mission decision.</p>
@@ -298,14 +304,14 @@ function MissionFlow({ result }: { result: InvestigationResult }) {
         </div>
       </article>
       <article className={decisionClass(result.decision_gate.decision) + ' flow-stage decision-stage'}>
-        <div className="flow-step">04</div>
+        <div className="flow-node"><b>04</b><span /></div>
         <span>Mission decision</span>
         <strong>{result.decision_gate.label}</strong>
         <p>Risk {result.risk.risk_score} · Confidence {result.risk.confidence_score}</p>
         <small>{result.risk.posture}</small>
       </article>
       <article className="flow-stage controls-stage">
-        <div className="flow-step">05</div>
+        <div className="flow-node"><b>05</b><span /></div>
         <span>72h controls</span>
         <strong>{result.action_board.length} actions</strong>
         <div className="control-stack">

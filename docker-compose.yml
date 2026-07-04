@@ -12,6 +12,9 @@ services:
       STEALTHMOLE_CONFIG_PATH: /run/secrets/stealthmole/.env
       ATLAS_API_KEY: ${ATLAS_API_KEY:-}
       ATLAS_DOCS_ENABLED: ${ATLAS_DOCS_ENABLED:-false}
+      ATLAS_ALLOWED_HOSTS: ${ATLAS_ALLOWED_HOSTS:-localhost,127.0.0.1}
+      ATLAS_ALLOWED_ORIGINS: ${ATLAS_ALLOWED_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
+      ATLAS_MAX_REQUEST_BODY_BYTES: ${ATLAS_MAX_REQUEST_BODY_BYTES:-200000}
   frontend:
     image: node:22-slim
     working_dir: /app/frontend

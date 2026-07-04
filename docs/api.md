@@ -41,6 +41,7 @@ Request:
 Operational behavior:
 
 - `live=true` is the default.
+- `/api/investigate` and `/api/quotas` fail closed without a valid API key.
 - The backend requires a concrete domain, URL, email address, or IP address.
 - Keyword-only requests such as `hello` return `422 Unprocessable Entity`.
 - Bare site inputs such as `defense-supplier.co.kr` are automatically expanded to the default joint-training Mission Exposure Gate.
@@ -49,6 +50,8 @@ Operational behavior:
 - `live=false` does not generate mock evidence in operational mode.
 - Passwords, tokens, API keys, and secrets are redacted before response serialization.
 - Request fields are bounded: `query` 2-2000 chars, `classification` max 128 chars, `time_window_days` 1-3650, `max_results_per_source` 1-50.
+- Request body size is bounded by `ATLAS_MAX_REQUEST_BODY_BYTES`.
+- Responses include hardened browser/security headers and a request ID.
 
 Response sections:
 

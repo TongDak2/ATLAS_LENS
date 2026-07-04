@@ -26,6 +26,7 @@ from fastapi import HTTPException
 
 from app.core.auth import AuthContext, _RATE_BUCKETS, enforce_rate_limit
 from app.core.config import settings
+from app.core.security import redact
 from app.main import app
 from app.models import InvestigationRequest
 from app.services.entity_extractor import extract_entities, has_investigable_target
@@ -35,7 +36,7 @@ from app.services.query_normalizer import normalize_query
 
 settings.atlas_api_key = 'validate-test-key'
 _RATE_BUCKETS.clear()
-client = TestClient(app)
+client = TestClient(app, base_url='http://localhost')
 headers = {'X-Atlas-API-Key': settings.atlas_api_key}
 valid_body = {
     'query': '다음 주 연합훈련 전 defense-supplier.co.kr 관련 유출 계정, 감염 단말, 랜섬웨어 언급, 텔레그램 위협 신호를 조사하고 Mission GO/NO-GO 판단과 72시간 조치 계획을 만들어줘.',
@@ -47,6 +48,11 @@ valid_body = {
 
 health = client.get('/api/health')
 assert health.status_code == 200, health.text
+assert health.headers.get('x-content-type-options') == 'nosniff', dict(health.headers)
+assert health.headers.get('x-frame-options') == 'DENY', dict(health.headers)
+assert health.headers.get('referrer-policy') == 'no-referrer', dict(health.headers)
+assert health.headers.get('cache-control') == 'no-store', dict(health.headers)
+assert health.headers.get('x-request-id'), dict(health.headers)
 assert 'stealthmole_configured' not in health.json(), health.json()
 assert client.get('/openapi.json').status_code == 404
 assert client.get('/docs').status_code == 404
@@ -116,6 +122,24 @@ bad_limit = dict(valid_body, max_results_per_source=999)
 assert client.post('/api/investigate', headers=headers, json=bad_limit).status_code == 422
 bad_classification = dict(valid_body, classification='X' * 129)
 assert client.post('/api/investigate', headers=headers, json=bad_classification).status_code == 422
+
+old_body_limit = settings.atlas_max_request_body_bytes
+settings.atlas_max_request_body_bytes = 32
+large_body = b'{"query":"defense-supplier.co.kr","live":false}' + b'A' * 80
+res = client.post('/api/investigate', headers={**headers, 'Content-Type': 'application/json'}, content=large_body)
+assert res.status_code == 413, res.text
+settings.atlas_max_request_body_bytes = old_body_limit
+
+redacted = redact({
+    'access_token': 'token-value',
+    'refreshCredential': 'credential-value',
+    'nested': {'client_secret': 'secret-value'},
+    'email': 'operator@example.mil',
+})
+assert redacted['access_token'] == '<redacted>', redacted
+assert redacted['refreshCredential'] == '<redacted>', redacted
+assert redacted['nested']['client_secret'] == '<redacted>', redacted
+assert redacted['email'] == 'ope***@example.mil', redacted
 
 email_entities = [(e.type, e.value) for e in extract_entities('user@example.mil 유출 여부')]
 assert ('email', 'user@example.mil') in email_entities, email_entities

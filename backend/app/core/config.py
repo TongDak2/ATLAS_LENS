@@ -22,6 +22,8 @@ class Settings(BaseSettings):
 
     atlas_env: str = "production"
     atlas_allowed_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+    atlas_allowed_hosts: str = "localhost,127.0.0.1"
+    atlas_max_request_body_bytes: int = 200_000
     atlas_api_key: str = ""
     atlas_docs_enabled: bool = False
     atlas_rate_limit_window_seconds: int = 60
@@ -40,6 +42,10 @@ class Settings(BaseSettings):
     @property
     def allowed_origins(self) -> List[str]:
         return [x.strip() for x in self.atlas_allowed_origins.split(",") if x.strip()]
+
+    @property
+    def allowed_hosts(self) -> List[str]:
+        return [x.strip() for x in self.atlas_allowed_hosts.split(",") if x.strip()]
 
     def load_external_stealthmole_env(self) -> None:
         path = Path(self.stealthmole_config_path).expanduser()

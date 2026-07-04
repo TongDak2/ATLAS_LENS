@@ -252,6 +252,8 @@ cp .env.example .env
 ATLAS_API_KEY=change-this-local-operator-key
 ATLAS_DOCS_ENABLED=false
 ATLAS_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+ATLAS_ALLOWED_HOSTS=localhost,127.0.0.1
+ATLAS_MAX_REQUEST_BODY_BYTES=200000
 ```
 
 StealthMole credential은 repo 밖에 보관하는 것을 권장합니다.
@@ -399,4 +401,3 @@ Git에 포함하지 않는 항목:
 - `.venv/`
 - `node_modules/`
 - build output
-
