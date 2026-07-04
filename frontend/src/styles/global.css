@@ -128,7 +128,19 @@ a { color: var(--accent); }
 .context-grid dd { word-break: break-word; }
 .surface-notes { margin: 16px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
 .surface-notes li { padding: 10px 0; border-bottom: 1px solid var(--line); color: var(--muted); line-height: 1.45; }
-.brief-text { font-size: clamp(22px, 2.4vw, 42px); line-height: 1.08; letter-spacing: -.045em; margin: 26px 0; }
+.brief-text {
+  max-width: 1040px;
+  margin: 18px 0 22px;
+  padding: 18px 22px 18px 24px;
+  border: 1px solid var(--line-strong);
+  border-left: 6px solid var(--accent);
+  background: var(--neutral);
+  color: var(--ink);
+  font-size: clamp(17px, 1.15vw, 20px);
+  line-height: 1.68;
+  letter-spacing: -.012em;
+  font-weight: 650;
+}
 .brief-list, .control-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; border-top: 1px solid var(--line); }
 .brief-list li { padding: 12px 0; border-bottom: 1px solid var(--line); color: var(--muted); line-height: 1.45; }
 
