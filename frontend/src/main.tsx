@@ -23,6 +23,10 @@ function proofUrl(ev: Evidence): string | undefined {
   const value = raw.proof_url || raw.url || raw.host
   return typeof value === 'string' && value.startsWith('http') ? value : undefined
 }
+function shortText(value: string, max = 120) {
+  const text = value.trim()
+  return text.length > max ? `${text.slice(0, max).trim()}…` : text
+}
 function hasInvestigableTarget(query: string) {
   const q = query.trim()
   if (!q) return false
@@ -40,7 +44,7 @@ function Topbar() {
       <div className="brand-kicker">Mission Exposure Decision Gate</div>
       <h1>ATLAS LENS</h1>
     </div>
-    <div className="topbar-note">Evidence-backed mission assurance for exercises, operations, defense suppliers, public releases, and incident claims.</div>
+    <div className="topbar-note">Live CTI evidence into mission GO/NO-GO.</div>
   </header>
 }
 
@@ -66,8 +70,8 @@ function CommandPanel({ onRun, loading }: { onRun: (q: string, apiKey: string) =
   return <section className="command-panel">
     <div className="section-index">00</div>
     <div className="command-copy">
-      <h2>Ask for mission readiness, not a search.</h2>
-      <p>작전, 훈련, 방산 협력사 연동, 대외 공개, 침해 주장 같은 임무 상황을 자연어로 입력하면 Atlas Lens가 CTI 모듈을 오케스트레이션하고 evidence를 Mission GO/NO-GO 판단과 72시간 Mission Assurance Board로 변환합니다.</p>
+      <h2>Mission first. Evidence next.</h2>
+      <p>사이트·이메일·IP를 입력하면 CTI 조회, Mission GO/NO-GO, 72시간 조치 계획으로 정리합니다.</p>
     </div>
     <div className="command-form">
       <label>Mission query</label>
@@ -90,7 +94,7 @@ function DecisionGate({ result }: { result: InvestigationResult }) {
     <div className={decisionClass(gate.decision)}>
       <div className="decision-label">Mission Decision Gate</div>
       <strong>{gate.label}</strong>
-      <p>{gate.rationale}</p>
+      <p title={gate.rationale}>{shortText(gate.rationale, 190)}</p>
     </div>
     <div className="decision-metrics">
       <div><span>Risk</span><strong>{result.risk.risk_score}</strong></div>
@@ -104,15 +108,13 @@ function DecisionGate({ result }: { result: InvestigationResult }) {
 function MissionContext({ result }: { result: InvestigationResult }) {
   const m = result.mission_context
   return <section className="panel context-panel">
-    <div className="panel-index">02</div>
+    <div className="panel-index">03</div>
     <div className="panel-header"><h2><Target size={18}/> Mission context</h2></div>
     <dl className="context-grid">
       <dt>Type</dt><dd>{m.mission_type}</dd>
       <dt>Target</dt><dd>{m.target}</dd>
-      <dt>Mission</dt><dd>{m.mission_event}</dd>
+      <dt>Mission</dt><dd title={m.mission_event}>{shortText(m.mission_event, 120)}</dd>
       <dt>Deadline</dt><dd>{m.deadline}</dd>
-      <dt>Question</dt><dd>{m.decision_question}</dd>
-      <dt>Stakeholders</dt><dd>{m.stakeholders.join(', ')}</dd>
     </dl>
   </section>
 }
@@ -125,39 +127,41 @@ function TargetSurface({ result }: { result: InvestigationResult }) {
   const title = typeof s.title === 'string' && s.title ? s.title : 'not available'
   const ipCount = typeof s.resolved_address_count === 'number' ? String(s.resolved_address_count) : '0'
   return <section className="panel surface-panel">
-    <div className="panel-index">03</div>
+    <div className="panel-index">04</div>
     <div className="panel-header"><h2><Globe2 size={18}/> Target surface</h2></div>
     <dl className="context-grid">
       <dt>Target</dt><dd>{p.display || p.value}</dd>
-      <dt>Input</dt><dd>{p.original_query}</dd>
-      <dt>Applied query</dt><dd>{p.query_was_expanded ? p.normalized_query : '사용자 입력 그대로 실행'}</dd>
       <dt>Landing URL</dt><dd>{finalUrl || 'not available'}</dd>
       <dt>HTTP</dt><dd>{status}</dd>
       <dt>Title</dt><dd>{title}</dd>
       <dt>Public IPs</dt><dd>{ipCount}</dd>
     </dl>
+    <details className="compact-details">
+      <summary>Query used</summary>
+      <p>{p.query_was_expanded ? p.normalized_query : p.original_query}</p>
+    </details>
     {p.collection_notes.length > 0 && <ul className="surface-notes">{p.collection_notes.map((n, i) => <li key={i}>{n}</li>)}</ul>}
   </section>
 }
 
 function ExecutiveBrief({ result }: { result: InvestigationResult }) {
   return <section className="panel brief-panel">
-    <div className="panel-index">04</div>
+    <div className="panel-index">05</div>
     <div className="panel-header"><h2><FileText size={18}/> Executive brief</h2></div>
     <p className="brief-text">{result.report.executive_summary}</p>
-    <ul className="brief-list">{result.report.key_findings.slice(0, 4).map((x, i) => <li key={i}>{x}</li>)}</ul>
+    <ul className="brief-list">{result.report.key_findings.slice(0, 3).map((x, i) => <li key={i}>{shortText(x, 150)}</li>)}</ul>
   </section>
 }
 
 function SourceStatus({ result }: { result: InvestigationResult }) {
   return <section className="panel source-panel">
-    <div className="panel-index">05</div>
+    <div className="panel-index">06</div>
     <div className="panel-header"><h2><Database size={18}/> Source status</h2></div>
     <div className="source-grid">
       {result.plan.map(p => <div className="source-card" key={p.id}>
         <div><strong>{p.module}</strong><span>{p.status}</span></div>
-        <p>{p.objective}</p>
-        <small>{p.reason || p.query}</small>
+        <p title={p.objective}>{shortText(p.objective, 68)}</p>
+        <small>{p.query}</small>
       </div>)}
     </div>
   </section>
@@ -166,13 +170,13 @@ function SourceStatus({ result }: { result: InvestigationResult }) {
 function MilitaryDeployability({ result }: { result: InvestigationResult }) {
   const d = result.deployability
   return <section className="panel deploy-panel">
-    <div className="panel-index">06</div>
+    <div className="panel-index">07</div>
     <div className="panel-header"><h2><ShieldCheck size={18}/> Military deployability</h2></div>
     <div className="deploy-grid">
-      <div><strong>Deployment locations</strong><ul>{d.deployment_locations.map((x, i) => <li key={i}>{x}</li>)}</ul></div>
-      <div><strong>Security controls</strong><ul>{d.security_controls.map((x, i) => <li key={i}>{x}</li>)}</ul></div>
-      <div><strong>Operational limitations</strong><ul>{d.operational_limitations.map((x, i) => <li key={i}>{x}</li>)}</ul></div>
-      <div><strong>Integration points</strong><ul>{d.integration_points.map((x, i) => <li key={i}>{x}</li>)}</ul></div>
+      <div><strong>Deployment locations</strong><ul>{d.deployment_locations.slice(0, 3).map((x, i) => <li key={i}>{shortText(x, 96)}</li>)}</ul></div>
+      <div><strong>Security controls</strong><ul>{d.security_controls.slice(0, 3).map((x, i) => <li key={i}>{shortText(x, 96)}</li>)}</ul></div>
+      <div><strong>Operational limitations</strong><ul>{d.operational_limitations.slice(0, 3).map((x, i) => <li key={i}>{shortText(x, 96)}</li>)}</ul></div>
+      <div><strong>Integration points</strong><ul>{d.integration_points.slice(0, 3).map((x, i) => <li key={i}>{shortText(x, 96)}</li>)}</ul></div>
     </div>
   </section>
 }
@@ -181,7 +185,7 @@ function StandardsPanel({ result }: { result: InvestigationResult }) {
   const s = result.standards
   const objectCount = Array.isArray(s.stix_bundle?.objects) ? s.stix_bundle.objects.length : 0
   return <section className="panel standards-panel">
-    <div className="panel-index">07</div>
+    <div className="panel-index">08</div>
     <div className="panel-header"><h2><GitBranch size={18}/> Standards interoperability</h2></div>
     <div className="standards-summary">
       <div><span>MITRE ATT&CK</span><strong>{s.attack_mappings.length}</strong></div>
@@ -191,7 +195,7 @@ function StandardsPanel({ result }: { result: InvestigationResult }) {
     {s.attack_mappings.length ? <div className="mapping-list">{s.attack_mappings.map(m => <article key={m.technique_id + m.evidence_ids.join('-')}>
       <strong>{m.technique_id} · {m.technique_name}</strong>
       <span>{m.tactic} · {Math.round(m.confidence * 100)}%</span>
-      <p>{m.rationale}</p>
+      <p>{shortText(m.rationale, 120)}</p>
     </article>)}</div> : <div className="empty-state">현재 actionable evidence가 없어 ATT&CK technique mapping은 생성되지 않았습니다.</div>}
     <ul className="surface-notes">{s.taxii_readiness.map((x, i) => <li key={i}>{x}</li>)}</ul>
   </section>
@@ -199,13 +203,13 @@ function StandardsPanel({ result }: { result: InvestigationResult }) {
 
 function ActionBoard({ actions, selected, onSelect }: { actions: ActionItem[]; selected?: ActionItem; onSelect: (a: ActionItem) => void }) {
   return <section className="panel action-panel">
-    <div className="panel-index">08</div>
+    <div className="panel-index">09</div>
     <div className="panel-header"><h2><ListChecks size={18}/> 72-hour mission assurance board</h2></div>
     <div className="action-list">
       {actions.map(a => <button key={a.id} className={selected?.id === a.id ? 'action-row selected' : 'action-row'} onClick={() => onSelect(a)}>
         <span className="window">{a.window}</span>
         <span className="owner">{a.owner}</span>
-        <span className="action-text">{a.action}</span>
+        <span className="action-text" title={a.action}>{shortText(a.action, 120)}</span>
         <span className="status">{a.status}</span>
       </button>)}
     </div>
@@ -214,15 +218,15 @@ function ActionBoard({ actions, selected, onSelect }: { actions: ActionItem[]; s
 
 function EvidenceTable({ evidence, selected, onSelect }: { evidence: Evidence[]; selected?: Evidence; onSelect: (ev: Evidence) => void }) {
   return <section className="panel evidence-panel">
-    <div className="panel-index">09</div>
+    <div className="panel-index">10</div>
     <div className="panel-header"><h2><ShieldCheck size={18}/> Evidence matrix</h2></div>
-    {evidence.length ? <div className="table-scroll"><table className="matrix"><thead><tr><th>ID</th><th>Source</th><th>Finding</th><th>Severity</th><th>Time</th><th>Link</th></tr></thead><tbody>{evidence.map(ev => <tr key={ev.id} onClick={() => onSelect(ev)} className={selected?.id === ev.id ? 'selected-row' : ''}><td><strong>{ev.citation}</strong></td><td>{ev.source}<br/><span>{ev.module}</span></td><td><strong>{ev.title}</strong><br/><span>{ev.summary}</span></td><td><span className={severityClass(ev.severity)}>{ev.severity}</span></td><td>{fmtDate(ev.event_time)}</td><td>{proofUrl(ev) ? <a onClick={e => e.stopPropagation()} href={proofUrl(ev)} target="_blank" rel="noreferrer"><ExternalLink size={15}/></a> : '-'}</td></tr>)}</tbody></table></div> : <div className="empty-state">현재 live 조회 범위에서 정규화된 외부 evidence가 없습니다. 내부 로그 검증을 조건으로 mission gate를 검토하세요.</div>}
+    {evidence.length ? <div className="table-scroll"><table className="matrix"><thead><tr><th>ID</th><th>Source</th><th>Finding</th><th>Severity</th><th>Time</th><th>Link</th></tr></thead><tbody>{evidence.map(ev => <tr key={ev.id} onClick={() => onSelect(ev)} className={selected?.id === ev.id ? 'selected-row' : ''}><td><strong>{ev.citation}</strong></td><td>{ev.source}<br/><span>{ev.module}</span></td><td><strong>{ev.title}</strong><br/><span title={ev.summary}>{shortText(ev.summary, 130)}</span></td><td><span className={severityClass(ev.severity)}>{ev.severity}</span></td><td>{fmtDate(ev.event_time)}</td><td>{proofUrl(ev) ? <a onClick={e => e.stopPropagation()} href={proofUrl(ev)} target="_blank" rel="noreferrer"><ExternalLink size={15}/></a> : '-'}</td></tr>)}</tbody></table></div> : <div className="empty-state">정규화된 외부 evidence 없음. 내부 로그 검증을 조건으로 검토하세요.</div>}
   </section>
 }
 
 function DetailPanel({ detail }: { detail: Detail }) {
   return <section className="panel detail-panel">
-    <div className="panel-index">10</div>
+    <div className="panel-index">11</div>
     <div className="panel-header"><h2><FileText size={18}/> Detail</h2></div>
     {!detail ? <div className="empty-state">Evidence 또는 action 행을 선택하세요.</div> : detail.kind === 'evidence' ? <EvidenceDetail ev={detail.item}/> : <ActionDetail action={detail.item}/>}
   </section>
@@ -232,7 +236,7 @@ function EvidenceDetail({ ev }: { ev: Evidence }) {
     <h3>{ev.citation} {ev.title}</h3>
     <p>{ev.summary}</p>
     <dl><dt>Source</dt><dd>{ev.source}</dd><dt>Query</dt><dd>{ev.query}</dd><dt>Event time</dt><dd>{fmtDate(ev.event_time)}</dd><dt>Confidence</dt><dd>{Math.round(ev.confidence * 100)}%</dd></dl>
-    <details open><summary>Redacted raw record</summary><pre>{JSON.stringify(rawOf(ev), null, 2)}</pre></details>
+    <details><summary>Redacted raw record</summary><pre>{JSON.stringify(rawOf(ev), null, 2)}</pre></details>
   </div>
 }
 function ActionDetail({ action }: { action: ActionItem }) {
@@ -265,66 +269,72 @@ function MissionFlow({ result }: { result: InvestigationResult }) {
     return acc
   }, {})
   const sourceCount = new Set(actionable.map(ev => ev.module)).size
-  const publicSurface = result.evidence.filter(ev => ev.evidence_type === 'public_indicator')
   const controls = result.action_board.slice(0, 3)
   const signalRows = Object.entries(grouped)
   const decision = result.decision_gate.decision.replace(/_/g, ' ')
+  const decisionState = result.decision_gate.decision.toLowerCase().replace(/_/g, '-')
+  const modules = result.plan.slice(0, 7)
   return <div className="mission-flow-wrap">
-    <p className="flow-caption">이 흐름도는 외부 CTI evidence가 임무 판단으로 바뀌는 경로를 보여줍니다. 왼쪽의 임무와 대상에서 시작해, 가운데의 actionable exposure가 오른쪽의 Mission Decision과 72시간 조치로 연결됩니다.</p>
     <div className="flow-summary-strip">
       <div><span>Mission type</span><strong>{result.mission_context.mission_type}</strong></div>
       <div><span>Target</span><strong>{result.target_profile.display || result.target_profile.value || result.mission_context.target}</strong></div>
       <div><span>Actionable evidence</span><strong>{actionable.length}</strong></div>
       <div><span>Decision</span><strong>{decision}</strong></div>
     </div>
-    <div className="mission-flow">
-      <article className="flow-stage">
-        <div className="flow-node"><b>01</b><span /></div>
-        <span>Mission event</span>
-        <strong>{result.mission_context.title}</strong>
-        <p>{result.mission_context.mission_event}</p>
-        <small>Deadline: {result.mission_context.deadline}</small>
-      </article>
-      <article className="flow-stage">
-        <div className="flow-node"><b>02</b><span /></div>
-        <span>Target</span>
-        <strong>{result.mission_context.target}</strong>
-        <p>{result.target_profile.kind} · {result.target_profile.display || result.target_profile.value}</p>
-        <small>{publicSurface.length ? 'Public surface context collected' : 'No public surface context'}</small>
-      </article>
-      <article className={actionable.length ? 'flow-stage exposure-stage' : 'flow-stage exposure-stage no-signal'}>
-        <div className="flow-node"><b>03</b><span /></div>
-        <span>Exposure signals</span>
-        <strong>{actionable.length} evidence</strong>
-        <p>{sourceCount} CTI source{sourceCount === 1 ? '' : 's'} affected the mission decision.</p>
-        <div className="signal-stack">
-          {signalRows.length ? signalRows.map(([label, items]) => <div className="signal-row" key={label}>
-            <b>{label}</b><em>{items.length}</em><small>{items.map(x => x.citation).join(', ')}</small>
-          </div>) : <div className="signal-row empty"><b>No actionable external signal</b><em>0</em><small>Public context is not counted as risk evidence.</small></div>}
-        </div>
-      </article>
-      <article className={decisionClass(result.decision_gate.decision) + ' flow-stage decision-stage'}>
-        <div className="flow-node"><b>04</b><span /></div>
-        <span>Mission decision</span>
-        <strong>{result.decision_gate.label}</strong>
-        <p>Risk {result.risk.risk_score} · Confidence {result.risk.confidence_score}</p>
-        <small>{result.risk.posture}</small>
-      </article>
-      <article className="flow-stage controls-stage">
-        <div className="flow-node"><b>05</b><span /></div>
-        <span>72h controls</span>
-        <strong>{result.action_board.length} actions</strong>
-        <div className="control-stack">
-          {controls.map(action => <div key={action.id} className="control-chip"><b>{action.window}</b><span>{action.owner}</span></div>)}
-        </div>
-        <small>Open the action board for full success criteria.</small>
-      </article>
+    <div className="flowchart" aria-label="Mission flow chart">
+      <div className="flowchart-track">
+        <article className="chart-node">
+          <span className="chart-step">01</span>
+          <strong>Mission</strong>
+          <small title={result.mission_context.mission_event}>{shortText(result.mission_context.mission_event, 78)}</small>
+        </article>
+        <div className="chart-connector"><span>scope</span></div>
+        <article className="chart-node">
+          <span className="chart-step">02</span>
+          <strong>Target</strong>
+          <small>{result.target_profile.display || result.target_profile.value}</small>
+        </article>
+        <div className="chart-connector"><span>query</span></div>
+        <article className="chart-node chart-fusion">
+          <span className="chart-step">03</span>
+          <strong>CTI Fusion</strong>
+          <div className="module-pills">
+            {modules.map(step => <span key={step.id} className={`module-pill ${step.status}`}>{step.module}</span>)}
+          </div>
+        </article>
+        <div className="chart-connector"><span>{actionable.length} signal</span></div>
+        <article className={`chart-decision ${decisionState}`}>
+          <div className="decision-diamond">
+            <div>
+              <span className="chart-step">04</span>
+              <strong>{result.decision_gate.label}</strong>
+              <small>Risk {result.risk.risk_score} · Confidence {result.risk.confidence_score}</small>
+            </div>
+          </div>
+        </article>
+        <div className="chart-connector"><span>orders</span></div>
+        <article className="chart-node">
+          <span className="chart-step">05</span>
+          <strong>72h Board</strong>
+          <small>{result.action_board.length} mission controls</small>
+        </article>
+      </div>
+      <div className="flowchart-lower">
+        <section className="signal-board">
+          <div><span>Exposure signals</span><strong>{sourceCount} sources</strong></div>
+          {signalRows.length ? signalRows.slice(0, 5).map(([label, items]) => <p key={label}><b>{label}</b><em>{items.length}</em></p>) : <p><b>No actionable signal</b><em>0</em></p>}
+        </section>
+        <section className="control-board">
+          <div><span>First controls</span><strong>{controls.length} shown</strong></div>
+          {controls.map(action => <p key={action.id}><b>{action.window}</b><em>{action.owner}</em></p>)}
+        </section>
+      </div>
     </div>
   </div>
 }
 function GraphPanel({ result }: { result: InvestigationResult }) {
   return <section className="panel graph-panel">
-    <div className="panel-index">11</div>
+    <div className="panel-index">02</div>
     <div className="panel-header"><h2><GitBranch size={18}/> Mission flow graph</h2></div>
     <MissionFlow result={result}/>
   </section>
@@ -360,7 +370,7 @@ function App() {
   const selectedEvidence = detail?.kind === 'evidence' ? detail.item : undefined
   const selectedAction = detail?.kind === 'action' ? detail.item : undefined
 
-  return <div className="app"><Topbar/><CommandPanel onRun={run} loading={loading}/>{error && <div className="error">{error}</div>}{!result && !loading && <div className="start-state">실제 사이트 주소를 입력하세요. 예: defense-supplier.co.kr — 사이트 주소만 입력하면 기본 연합훈련 전 Mission Exposure Gate로 자동 확장됩니다.</div>}{result && <main className="result-grid"><DecisionGate result={result}/><MissionContext result={result}/><TargetSurface result={result}/><ExecutiveBrief result={result}/><SourceStatus result={result}/><MilitaryDeployability result={result}/><StandardsPanel result={result}/><ActionBoard actions={result.action_board} selected={selectedAction} onSelect={item => setDetail({kind:'action', item})}/><EvidenceTable evidence={result.evidence} selected={selectedEvidence} onSelect={item => setDetail({kind:'evidence', item})}/><DetailPanel detail={detail}/><GraphPanel result={result}/><Timeline result={result}/><ControlsPanel result={result}/></main>}</div>
+  return <div className="app"><Topbar/><CommandPanel onRun={run} loading={loading}/>{error && <div className="error">{error}</div>}{!result && !loading && <div className="start-state">실제 사이트 주소를 입력하세요. 예: defense-supplier.co.kr — 사이트 주소만 입력하면 기본 연합훈련 전 Mission Exposure Gate로 자동 확장됩니다.</div>}{result && <main className="result-grid"><DecisionGate result={result}/><GraphPanel result={result}/><MissionContext result={result}/><TargetSurface result={result}/><ExecutiveBrief result={result}/><SourceStatus result={result}/><MilitaryDeployability result={result}/><StandardsPanel result={result}/><ActionBoard actions={result.action_board} selected={selectedAction} onSelect={item => setDetail({kind:'action', item})}/><EvidenceTable evidence={result.evidence} selected={selectedEvidence} onSelect={item => setDetail({kind:'evidence', item})}/><DetailPanel detail={detail}/><Timeline result={result}/><ControlsPanel result={result}/></main>}</div>
 }
 
 createRoot(document.getElementById('root')!).render(<App />)
