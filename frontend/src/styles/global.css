@@ -196,12 +196,29 @@ a { color: var(--accent); }
 .detail-content summary { font-weight: 900; margin-bottom: 10px; }
 .detail-content pre { max-height: 360px; overflow: auto; border: 1px solid var(--line-strong); background: var(--neutral); padding: 12px; color: var(--ink); font-size: 12px; white-space: pre-wrap; word-break: break-word; }
 
-.mission-graph { width: 100%; min-height: 420px; border-top: 1px solid var(--line-strong); background: #fff; }
-.graph-lane { stroke: var(--line); stroke-width: 1; }
-.graph-edge { fill: none; stroke: var(--ink); stroke-width: 1.2; }
-.mission-graph text { font-size: 11px; fill: var(--muted); font-weight: 800; }
-.node-label { fill: var(--ink) !important; font-size: 12px !important; font-weight: 900 !important; }
-.node-type { fill: var(--muted) !important; font-size: 10px !important; text-transform: uppercase; }
+.mission-flow-wrap { border-top: 1px solid var(--line-strong); padding-top: 14px; }
+.flow-caption { margin: 0 0 14px; max-width: 980px; color: var(--muted); line-height: 1.55; }
+.mission-flow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border-top: 1px solid var(--line-strong); border-left: 1px solid var(--line-strong); background: #fff; }
+.flow-stage { position: relative; min-height: 280px; padding: 16px 14px 14px; border-right: 1px solid var(--line-strong); border-bottom: 1px solid var(--line-strong); display: flex; flex-direction: column; gap: 10px; }
+.flow-stage::after { content: ""; position: absolute; right: -11px; top: 50%; width: 20px; height: 1px; background: var(--line-strong); z-index: 2; }
+.flow-stage:last-child::after { display: none; }
+.flow-step { color: var(--accent); font-size: 42px; line-height: .85; letter-spacing: -.08em; font-weight: 900; }
+.flow-stage > span { color: var(--muted); font-size: 11px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.flow-stage > strong { display: block; font-size: clamp(20px, 1.7vw, 28px); line-height: 1.02; letter-spacing: -.055em; word-break: break-word; }
+.flow-stage > p { margin: 0; color: var(--muted); line-height: 1.42; }
+.flow-stage > small { margin-top: auto; color: var(--accent); font-weight: 900; line-height: 1.35; }
+.exposure-stage { background: var(--neutral); }
+.signal-stack, .control-stack { display: grid; gap: 7px; margin-top: 2px; }
+.signal-row { display: grid; grid-template-columns: 1fr 34px; gap: 8px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); }
+.signal-row b { font-size: 13px; line-height: 1.25; }
+.signal-row em { justify-self: end; min-width: 28px; border: 1px solid var(--line-strong); color: var(--accent); font-style: normal; font-weight: 900; text-align: center; padding: 3px 5px; }
+.signal-row small { grid-column: 1 / -1; color: var(--muted); word-break: break-word; }
+.signal-row.empty b { color: var(--muted); }
+.decision-stage { border-left: 6px solid var(--accent); }
+.decision-stage > strong { color: var(--ink); }
+.control-chip { display: grid; grid-template-columns: 58px 1fr; gap: 8px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); }
+.control-chip b { color: var(--accent); }
+.control-chip span { font-weight: 900; }
 
 .timeline-list { border-top: 1px solid var(--line-strong); }
 .time-item { padding: 14px 0; border-bottom: 1px solid var(--line); }
@@ -216,6 +233,8 @@ a { color: var(--accent); }
   .section-index, .decision-number { border-right: 0; padding-bottom: 0; }
   .decision, .decision-metrics { border-right: 0; }
   .context-panel, .surface-panel, .brief-panel, .source-panel, .deploy-panel, .standards-panel, .action-panel, .evidence-panel, .detail-panel, .graph-panel, .timeline-panel, .controls-panel { grid-column: span 12; }
+  .mission-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .flow-stage::after { display: none; }
   .action-row { grid-template-columns: 76px 94px 1fr; }
   .action-row .status { grid-column: 3; }
 }
@@ -227,6 +246,7 @@ a { color: var(--accent); }
   .decision-metrics { grid-template-columns: 1fr 1fr; }
   .context-grid, .detail-content dl { grid-template-columns: 1fr; }
   .deploy-grid, .standards-summary { grid-template-columns: 1fr; }
+  .mission-flow { grid-template-columns: 1fr; }
   .action-row { grid-template-columns: 1fr; gap: 6px; }
   .action-row .status { grid-column: auto; }
 }

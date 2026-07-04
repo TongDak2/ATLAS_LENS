@@ -1,8 +1,8 @@
-import React, { useMemo, useState } from 'react'
+import React, { useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { AlertTriangle, ArrowRight, CheckCircle2, Clock, Database, ExternalLink, FileText, GitBranch, Globe2, KeyRound, ListChecks, ShieldCheck, Target } from 'lucide-react'
 import { investigate } from './lib/api'
-import type { ActionItem, Evidence, GraphEdge, GraphNode, InvestigationResult, Severity } from './types/atlas'
+import type { ActionItem, Evidence, InvestigationResult, Severity } from './types/atlas'
 import './styles/global.css'
 
 const exampleQuery = '다음 주 연합훈련 전 defense-supplier.co.kr 관련 유출 계정, 감염 단말, 랜섬웨어 언급, 텔레그램 위협 신호를 조사하고 Mission GO/NO-GO 판단과 72시간 조치 계획을 만들어줘.'
@@ -244,42 +244,83 @@ function ActionDetail({ action }: { action: ActionItem }) {
   </div>
 }
 
-function MissionGraph({ nodes, edges }: { nodes: GraphNode[]; edges: GraphEdge[] }) {
-  const layout = useMemo(() => {
-    const lanes: Record<string, number> = { mission: 90, subject: 285, exposure: 500, impact: 700, control: 915, default: 500 }
-    const groups: Record<string, GraphNode[]> = {}
-    nodes.forEach(n => { (groups[n.group] ||= []).push(n) })
-    const pos: Record<string, {x:number;y:number;n:GraphNode}> = {}
-    Object.entries(groups).forEach(([group, arr]) => {
-      const x = lanes[group] || lanes.default
-      const start = arr.length > 1 ? 120 : 220
-      const gap = arr.length > 1 ? Math.min(110, 330 / (arr.length - 1 || 1)) : 0
-      arr.forEach((n, i) => { pos[n.id] = { x, y: start + i * gap, n } })
-    })
-    return pos
-  }, [nodes])
-  const color = (g: string) => g === 'mission' ? '#002FA7' : g === 'control' ? '#002FA7' : g === 'impact' ? '#FF4F00' : g === 'exposure' ? '#E4002B' : '#111111'
-  return <svg className="mission-graph" viewBox="0 0 1040 520" role="img" aria-label="Mission decision graph">
-    <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#111"/></marker></defs>
-    {[90,285,500,700,915].map(x => <line key={x} x1={x} y1="60" x2={x} y2="460" className="graph-lane"/>)}
-    {edges.map(e => {
-      const s = layout[e.source], t = layout[e.target]
-      if (!s || !t) return null
-      const mid = (s.x + t.x) / 2
-      return <g key={e.id}><path className="graph-edge" d={`M ${s.x+70} ${s.y} C ${mid} ${s.y}, ${mid} ${t.y}, ${t.x-80} ${t.y}`} markerEnd="url(#arrow)"/><text x={mid - 32} y={(s.y+t.y)/2 - 5}>{e.label}</text></g>
-    })}
-    {nodes.map(n => {
-      const p = layout[n.id]
-      if (!p) return null
-      return <g key={n.id} transform={`translate(${p.x-72}, ${p.y-30})`}><rect width="144" height="60" fill="white" stroke={color(n.group)} strokeWidth="2"/><text x="12" y="23" className="node-label">{n.label.length > 22 ? `${n.label.slice(0, 21)}…` : n.label}</text><text x="12" y="43" className="node-type">{n.type}</text></g>
-    })}
-  </svg>
+function exposureLabel(type: string) {
+  if (type === 'credential_exposure' || type === 'combo_exposure') return 'Credentials'
+  if (type === 'stealer_exposure') return 'Infected endpoint'
+  if (type === 'ransomware_mention') return 'Ransomware'
+  if (type === 'leak_mention') return 'Leak monitoring'
+  if (type === 'telegram_mention') return 'Telegram threat'
+  if (type === 'vulnerability_pressure') return 'Vulnerability pressure'
+  if (type === 'public_indicator') return 'Public surface'
+  return 'Other signal'
+}
+function actionableEvidence(evidence: Evidence[]) {
+  const actionable = new Set(['credential_exposure', 'combo_exposure', 'stealer_exposure', 'ransomware_mention', 'leak_mention', 'telegram_mention', 'vulnerability_pressure'])
+  return evidence.filter(ev => actionable.has(ev.evidence_type))
+}
+function MissionFlow({ result }: { result: InvestigationResult }) {
+  const actionable = actionableEvidence(result.evidence)
+  const grouped = actionable.reduce<Record<string, Evidence[]>>((acc, ev) => {
+    const label = exposureLabel(ev.evidence_type)
+    ;(acc[label] ||= []).push(ev)
+    return acc
+  }, {})
+  const sourceCount = new Set(actionable.map(ev => ev.module)).size
+  const publicSurface = result.evidence.filter(ev => ev.evidence_type === 'public_indicator')
+  const controls = result.action_board.slice(0, 3)
+  const signalRows = Object.entries(grouped)
+  return <div className="mission-flow-wrap">
+    <p className="flow-caption">이 흐름도는 외부 CTI evidence가 임무 판단으로 바뀌는 경로를 보여줍니다. 왼쪽의 임무와 대상에서 시작해, 가운데의 actionable exposure가 오른쪽의 Mission Decision과 72시간 조치로 연결됩니다.</p>
+    <div className="mission-flow">
+      <article className="flow-stage">
+        <div className="flow-step">01</div>
+        <span>Mission event</span>
+        <strong>{result.mission_context.title}</strong>
+        <p>{result.mission_context.mission_event}</p>
+        <small>Deadline: {result.mission_context.deadline}</small>
+      </article>
+      <article className="flow-stage">
+        <div className="flow-step">02</div>
+        <span>Target</span>
+        <strong>{result.mission_context.target}</strong>
+        <p>{result.target_profile.kind} · {result.target_profile.display || result.target_profile.value}</p>
+        <small>{publicSurface.length ? 'Public surface context collected' : 'No public surface context'}</small>
+      </article>
+      <article className="flow-stage exposure-stage">
+        <div className="flow-step">03</div>
+        <span>Exposure signals</span>
+        <strong>{actionable.length} evidence</strong>
+        <p>{sourceCount} CTI source{sourceCount === 1 ? '' : 's'} affected the mission decision.</p>
+        <div className="signal-stack">
+          {signalRows.length ? signalRows.map(([label, items]) => <div className="signal-row" key={label}>
+            <b>{label}</b><em>{items.length}</em><small>{items.map(x => x.citation).join(', ')}</small>
+          </div>) : <div className="signal-row empty"><b>No actionable external signal</b><em>0</em><small>Public context is not counted as risk evidence.</small></div>}
+        </div>
+      </article>
+      <article className={decisionClass(result.decision_gate.decision) + ' flow-stage decision-stage'}>
+        <div className="flow-step">04</div>
+        <span>Mission decision</span>
+        <strong>{result.decision_gate.label}</strong>
+        <p>Risk {result.risk.risk_score} · Confidence {result.risk.confidence_score}</p>
+        <small>{result.risk.posture}</small>
+      </article>
+      <article className="flow-stage controls-stage">
+        <div className="flow-step">05</div>
+        <span>72h controls</span>
+        <strong>{result.action_board.length} actions</strong>
+        <div className="control-stack">
+          {controls.map(action => <div key={action.id} className="control-chip"><b>{action.window}</b><span>{action.owner}</span></div>)}
+        </div>
+        <small>Open the action board for full success criteria.</small>
+      </article>
+    </div>
+  </div>
 }
 function GraphPanel({ result }: { result: InvestigationResult }) {
   return <section className="panel graph-panel">
     <div className="panel-index">11</div>
-    <div className="panel-header"><h2><GitBranch size={18}/> Mission graph</h2></div>
-    <MissionGraph nodes={result.graph.nodes} edges={result.graph.edges}/>
+    <div className="panel-header"><h2><GitBranch size={18}/> Mission flow graph</h2></div>
+    <MissionFlow result={result}/>
   </section>
 }
 
