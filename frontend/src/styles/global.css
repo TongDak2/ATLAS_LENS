@@ -159,9 +159,6 @@ a { color: var(--accent); }
 .context-grid dd { word-break: break-word; }
 .surface-notes { margin: 16px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
 .surface-notes li { padding: 10px 0; border-bottom: 1px solid var(--line); color: var(--muted); line-height: 1.45; }
-.compact-details { margin-top: 12px; border-top: 1px solid var(--line); }
-.compact-details summary { padding: 10px 0; font-weight: 900; color: var(--accent); cursor: pointer; }
-.compact-details p { margin: 0 0 10px; color: var(--muted); line-height: 1.45; word-break: break-word; }
 .brief-text {
   width: 100%;
   max-width: none;

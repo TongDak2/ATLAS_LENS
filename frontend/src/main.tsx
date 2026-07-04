@@ -127,10 +127,6 @@ function TargetSurface({ result }: { result: InvestigationResult }) {
       <dt>Title</dt><dd>{title}</dd>
       <dt>Public IPs</dt><dd>{ipCount}</dd>
     </dl>
-    <details className="compact-details">
-      <summary>Query used</summary>
-      <p>{p.query_was_expanded ? p.normalized_query : p.original_query}</p>
-    </details>
     {p.collection_notes.length > 0 && <ul className="surface-notes">{p.collection_notes.map((n, i) => <li key={i}>{n}</li>)}</ul>}
   </section>
 }
