@@ -2,7 +2,7 @@ export type Severity = 'critical' | 'high' | 'medium' | 'low' | 'info'
 export type Decision = 'GO' | 'GO_WITH_CONTROLS' | 'NO_GO'
 
 export interface Entity { type: string; value: string; display?: string; confidence: number }
-export interface MissionContext { mission_type: string; title: string; target: string; deadline: string; business_event: string; decision_question: string; stakeholders: string[] }
+export interface MissionContext { mission_type: string; title: string; target: string; deadline: string; mission_event: string; decision_question: string; stakeholders: string[] }
 export interface TargetProfile {
   kind: string
   value: string
@@ -15,6 +15,9 @@ export interface TargetProfile {
   collection_notes: string[]
 }
 export interface DecisionGate { decision: Decision; label: string; rationale: string; required_controls: string[]; blocking_conditions: string[]; evidence_ids: string[] }
+export interface DeployabilityProfile { deployment_locations: string[]; security_controls: string[]; operational_limitations: string[]; integration_points: string[]; approval_notes: string[] }
+export interface AttackMapping { framework: string; tactic: string; technique_id: string; technique_name: string; rationale: string; evidence_ids: string[]; confidence: number }
+export interface StandardsInterop { attack_mappings: AttackMapping[]; stix_bundle: Record<string, unknown>; taxii_readiness: string[]; references: Array<{ name: string; url: string }> }
 export interface ActionItem { id: string; window: string; owner: string; action: string; success_criteria: string; evidence_ids: string[]; status: string }
 export interface PlanStep { id: string; module: string; objective: string; query: string; status: string; reason: string }
 export interface Evidence { id: string; source: string; module: string; evidence_type: string; title: string; summary: string; query: string; retrieved_at: string; event_time?: string; confidence: number; severity: Severity; citation: string; metadata?: Record<string, unknown> }
@@ -37,6 +40,8 @@ export interface InvestigationResult {
   mission_context: MissionContext
   target_profile: TargetProfile
   decision_gate: DecisionGate
+  deployability: DeployabilityProfile
+  standards: StandardsInterop
   action_board: ActionItem[]
   plan: PlanStep[]
   evidence: Evidence[]

@@ -14,7 +14,10 @@ EvidenceType = Literal[
 Severity = Literal["critical", "high", "medium", "low", "info"]
 Confidence = Literal["confirmed", "high", "medium", "low", "unknown"]
 Decision = Literal["GO", "GO_WITH_CONTROLS", "NO_GO"]
-MissionType = Literal["product_launch", "mna", "vendor_onboarding", "customer_trust", "executive_event", "incident_precheck", "general"]
+MissionType = Literal[
+    "joint_training", "operation_support", "defense_supplier", "public_release",
+    "incident_claim", "mission_assurance", "general"
+]
 
 
 def now_iso() -> str:
@@ -38,11 +41,11 @@ class InvestigationRequest(BaseModel):
 
 
 class MissionContext(BaseModel):
-    mission_type: MissionType = "general"
+    mission_type: MissionType = "mission_assurance"
     title: str
     target: str
     deadline: str = "not specified"
-    business_event: str
+    mission_event: str
     decision_question: str
     stakeholders: list[str] = Field(default_factory=list)
 
@@ -66,6 +69,31 @@ class DecisionGate(BaseModel):
     required_controls: list[str] = Field(default_factory=list)
     blocking_conditions: list[str] = Field(default_factory=list)
     evidence_ids: list[str] = Field(default_factory=list)
+
+
+class DeployabilityProfile(BaseModel):
+    deployment_locations: list[str] = Field(default_factory=list)
+    security_controls: list[str] = Field(default_factory=list)
+    operational_limitations: list[str] = Field(default_factory=list)
+    integration_points: list[str] = Field(default_factory=list)
+    approval_notes: list[str] = Field(default_factory=list)
+
+
+class AttackMapping(BaseModel):
+    framework: str = "MITRE ATT&CK Enterprise"
+    tactic: str
+    technique_id: str
+    technique_name: str
+    rationale: str
+    evidence_ids: list[str] = Field(default_factory=list)
+    confidence: float = 0.5
+
+
+class StandardsInterop(BaseModel):
+    attack_mappings: list[AttackMapping] = Field(default_factory=list)
+    stix_bundle: dict[str, Any] = Field(default_factory=dict)
+    taxii_readiness: list[str] = Field(default_factory=list)
+    references: list[dict[str, str]] = Field(default_factory=list)
 
 
 class ActionItem(BaseModel):
@@ -185,7 +213,7 @@ class Report(BaseModel):
 class InvestigationResult(BaseModel):
     investigation_id: str
     product: str = "Atlas Lens"
-    tagline: str = "Business-moment threat intelligence and decision support"
+    tagline: str = "Mission exposure intelligence and decision support"
     classification: str
     created_at: str = Field(default_factory=now_iso)
     query: str
@@ -193,6 +221,8 @@ class InvestigationResult(BaseModel):
     mission_context: MissionContext
     target_profile: TargetProfile
     decision_gate: DecisionGate
+    deployability: DeployabilityProfile
+    standards: StandardsInterop
     action_board: list[ActionItem]
     plan: list[InvestigationPlanStep]
     evidence: list[Evidence]

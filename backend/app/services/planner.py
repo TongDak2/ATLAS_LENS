@@ -15,8 +15,12 @@ def infer_intent(query: str) -> dict[str, bool]:
     telegram = _has_any(q, ["텔레그램", "telegram", "채널", "거래 채널"])
     monitoring = _has_any(q, ["기업 유출", "유출 언급", "다크웹", "언급", "osint", "외부 노출", "위협 신호"])
     government = _has_any(q, ["정부", "공공", "기관", "go.kr", ".mil", ".gov"])
-    business_gate = _has_any(q, ["go/no-go", "no-go", "액션 플랜", "의사결정", "출시", "계약", "인수", "고객", "벤더", "vendor", "launch", "deal", "trust"])
-    broad = _has_any(q, ["전체", "종합", "위협 신호", "분석하고", "생성해줘", "판단"]) or business_gate
+    mission_gate = _has_any(q, [
+        "go/no-go", "no-go", "mission go", "임무 진행", "진행 가능", "조치 계획", "액션 플랜",
+        "의사결정", "연합훈련", "훈련", "작전", "임무", "지휘통제", "c2", "포털", "공개",
+        "방산", "협력사", "공급망", "계약", "벤더", "vendor", "supplier", "operation", "exercise",
+    ])
+    broad = _has_any(q, ["전체", "종합", "위협 신호", "분석하고", "생성해줘", "판단"]) or mission_gate
     credential_only = credential and not any([stealer, ransomware, telegram, broad, monitoring, government])
     return {
         "credential": credential,
@@ -53,7 +57,7 @@ def build_plan(entities: list[Entity], max_results: int, query: str = "") -> lis
         if intent["stealer"] or intent["broad"]:
             add("CDS", "stealer 감염 단말 기반 계정·호스트 노출 확인", f"domain:{q}", "Compromised Data Set live search")
         if intent["monitoring"] or intent["broad"]:
-            add("LM", "기업/산업군 유출·협박 언급 확인", f"domain:{q}", "Leaked Monitoring live search")
+            add("LM", "임무 대상·공급망 유출·협박 언급 확인", f"domain:{q}", "Leaked Monitoring live search")
         if gov_like and (intent["monitoring"] or intent["broad"]):
             add("GM", "정부·공공 관련 위협 모니터링 확인", f"domain:{q}", "Government Monitoring live search")
         if intent["ransomware"] or intent["broad"]:

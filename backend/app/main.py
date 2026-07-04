@@ -9,7 +9,7 @@ from app.core.config import settings
 app = FastAPI(
     title="Atlas Lens API",
     version="0.1.0",
-    description="Business-moment threat intelligence and decision support API",
+    description="Mission exposure intelligence and decision support API",
     docs_url="/docs" if settings.atlas_docs_enabled else None,
     redoc_url="/redoc" if settings.atlas_docs_enabled else None,
     openapi_url="/openapi.json" if settings.atlas_docs_enabled else None,

@@ -5,7 +5,7 @@ import { investigate } from './lib/api'
 import type { ActionItem, Evidence, GraphEdge, GraphNode, InvestigationResult, Severity } from './types/atlas'
 import './styles/global.css'
 
-const exampleQuery = 'www.google.com 신규 결제 서비스 출시 전 유출 계정, 감염 단말, 랜섬웨어 언급, 텔레그램 위협 신호를 조사하고 Go/No-Go 판단과 72시간 액션 플랜을 만들어줘.'
+const exampleQuery = '다음 주 연합훈련 전 defense-supplier.co.kr 관련 유출 계정, 감염 단말, 랜섬웨어 언급, 텔레그램 위협 신호를 조사하고 Mission GO/NO-GO 판단과 72시간 조치 계획을 만들어줘.'
 
 type Detail = { kind: 'evidence'; item: Evidence } | { kind: 'action'; item: ActionItem } | null
 
@@ -37,10 +37,10 @@ function decisionClass(decision: string) { return `decision ${decision.toLowerCa
 function Topbar() {
   return <header className="topbar">
     <div className="brand-block">
-      <div className="brand-kicker">Business-Moment Threat Intelligence Copilot</div>
+      <div className="brand-kicker">Mission Exposure Decision Gate</div>
       <h1>ATLAS LENS</h1>
     </div>
-    <div className="topbar-note">Evidence-backed decision gates for launch, vendor, deal, and trust moments.</div>
+    <div className="topbar-note">Evidence-backed mission assurance for exercises, operations, defense suppliers, public releases, and incident claims.</div>
   </header>
 }
 
@@ -56,7 +56,7 @@ function CommandPanel({ onRun, loading }: { onRun: (q: string, apiKey: string) =
       return
     }
     if (!hasInvestigableTarget(query)) {
-      setValidationMessage('조사할 실제 사이트 주소, 도메인, 이메일 또는 IP를 포함해 주세요. 사이트 주소만 입력해도 기본 출시 전 점검으로 자동 확장됩니다. 예: www.google.com')
+      setValidationMessage('조사할 실제 사이트 주소, 도메인, 이메일 또는 IP를 포함해 주세요. 사이트 주소만 입력해도 기본 연합훈련 전 Mission Exposure Gate로 자동 확장됩니다. 예: defense-supplier.co.kr')
       return
     }
     sessionStorage.setItem('atlas_api_key', apiKey.trim())
@@ -67,8 +67,8 @@ function CommandPanel({ onRun, loading }: { onRun: (q: string, apiKey: string) =
   return <section className="command-panel">
     <div className="section-index">00</div>
     <div className="command-copy">
-      <h2>Ask for a decision, not a search.</h2>
-      <p>사이트 주소만 입력해도 Atlas Lens가 기본 출시 전 점검으로 확장합니다. 세부 업무 맥락을 같이 쓰면 출시, 계약, 인수, 고객 신뢰 대응에 맞춰 CTI 모듈을 오케스트레이션하고 evidence를 Go/No-Go 판단과 72시간 action board로 변환합니다.</p>
+      <h2>Ask for mission readiness, not a search.</h2>
+      <p>작전, 훈련, 방산 협력사 연동, 대외 공개, 침해 주장 같은 임무 상황을 자연어로 입력하면 Atlas Lens가 CTI 모듈을 오케스트레이션하고 evidence를 Mission GO/NO-GO 판단과 72시간 Mission Assurance Board로 변환합니다.</p>
     </div>
     <div className="command-form">
       <label>Mission query</label>
@@ -79,7 +79,7 @@ function CommandPanel({ onRun, loading }: { onRun: (q: string, apiKey: string) =
         <input type="password" value={apiKey} onChange={e => { setApiKey(e.target.value); if (validationMessage) setValidationMessage('') }} placeholder="X-Atlas-API-Key" autoComplete="off" />
       </div>
       {validationMessage && <div className="query-validation"><AlertTriangle size={16}/>{validationMessage}</div>}
-      <button className="primary" disabled={loading} onClick={submitMission}>{loading ? '조사 중...' : 'Run decision gate'}</button>
+      <button className="primary" disabled={loading} onClick={submitMission}>{loading ? '조사 중...' : 'Run mission gate'}</button>
     </div>
   </section>
 }
@@ -89,7 +89,7 @@ function DecisionGate({ result }: { result: InvestigationResult }) {
   return <section className="decision-wrap">
     <div className="decision-number">01</div>
     <div className={decisionClass(gate.decision)}>
-      <div className="decision-label">Decision Gate</div>
+      <div className="decision-label">Mission Decision Gate</div>
       <strong>{gate.label}</strong>
       <p>{gate.rationale}</p>
     </div>
@@ -110,6 +110,7 @@ function MissionContext({ result }: { result: InvestigationResult }) {
     <dl className="context-grid">
       <dt>Type</dt><dd>{m.mission_type}</dd>
       <dt>Target</dt><dd>{m.target}</dd>
+      <dt>Mission</dt><dd>{m.mission_event}</dd>
       <dt>Deadline</dt><dd>{m.deadline}</dd>
       <dt>Question</dt><dd>{m.decision_question}</dd>
       <dt>Stakeholders</dt><dd>{m.stakeholders.join(', ')}</dd>
@@ -163,10 +164,44 @@ function SourceStatus({ result }: { result: InvestigationResult }) {
   </section>
 }
 
+function MilitaryDeployability({ result }: { result: InvestigationResult }) {
+  const d = result.deployability
+  return <section className="panel deploy-panel">
+    <div className="panel-index">06</div>
+    <div className="panel-header"><h2><ShieldCheck size={18}/> Military deployability</h2></div>
+    <div className="deploy-grid">
+      <div><strong>Deployment locations</strong><ul>{d.deployment_locations.map((x, i) => <li key={i}>{x}</li>)}</ul></div>
+      <div><strong>Security controls</strong><ul>{d.security_controls.map((x, i) => <li key={i}>{x}</li>)}</ul></div>
+      <div><strong>Operational limitations</strong><ul>{d.operational_limitations.map((x, i) => <li key={i}>{x}</li>)}</ul></div>
+      <div><strong>Integration points</strong><ul>{d.integration_points.map((x, i) => <li key={i}>{x}</li>)}</ul></div>
+    </div>
+  </section>
+}
+
+function StandardsPanel({ result }: { result: InvestigationResult }) {
+  const s = result.standards
+  const objectCount = Array.isArray(s.stix_bundle?.objects) ? s.stix_bundle.objects.length : 0
+  return <section className="panel standards-panel">
+    <div className="panel-index">07</div>
+    <div className="panel-header"><h2><GitBranch size={18}/> Standards interoperability</h2></div>
+    <div className="standards-summary">
+      <div><span>MITRE ATT&CK</span><strong>{s.attack_mappings.length}</strong></div>
+      <div><span>STIX Objects</span><strong>{objectCount}</strong></div>
+      <div><span>TAXII Ready</span><strong>{s.taxii_readiness.length}</strong></div>
+    </div>
+    {s.attack_mappings.length ? <div className="mapping-list">{s.attack_mappings.map(m => <article key={m.technique_id + m.evidence_ids.join('-')}>
+      <strong>{m.technique_id} · {m.technique_name}</strong>
+      <span>{m.tactic} · {Math.round(m.confidence * 100)}%</span>
+      <p>{m.rationale}</p>
+    </article>)}</div> : <div className="empty-state">현재 actionable evidence가 없어 ATT&CK technique mapping은 생성되지 않았습니다.</div>}
+    <ul className="surface-notes">{s.taxii_readiness.map((x, i) => <li key={i}>{x}</li>)}</ul>
+  </section>
+}
+
 function ActionBoard({ actions, selected, onSelect }: { actions: ActionItem[]; selected?: ActionItem; onSelect: (a: ActionItem) => void }) {
   return <section className="panel action-panel">
-    <div className="panel-index">06</div>
-    <div className="panel-header"><h2><ListChecks size={18}/> 72-hour action board</h2></div>
+    <div className="panel-index">08</div>
+    <div className="panel-header"><h2><ListChecks size={18}/> 72-hour mission assurance board</h2></div>
     <div className="action-list">
       {actions.map(a => <button key={a.id} className={selected?.id === a.id ? 'action-row selected' : 'action-row'} onClick={() => onSelect(a)}>
         <span className="window">{a.window}</span>
@@ -180,15 +215,15 @@ function ActionBoard({ actions, selected, onSelect }: { actions: ActionItem[]; s
 
 function EvidenceTable({ evidence, selected, onSelect }: { evidence: Evidence[]; selected?: Evidence; onSelect: (ev: Evidence) => void }) {
   return <section className="panel evidence-panel">
-    <div className="panel-index">07</div>
+    <div className="panel-index">09</div>
     <div className="panel-header"><h2><ShieldCheck size={18}/> Evidence matrix</h2></div>
-    {evidence.length ? <div className="table-scroll"><table className="matrix"><thead><tr><th>ID</th><th>Source</th><th>Finding</th><th>Severity</th><th>Time</th><th>Link</th></tr></thead><tbody>{evidence.map(ev => <tr key={ev.id} onClick={() => onSelect(ev)} className={selected?.id === ev.id ? 'selected-row' : ''}><td><strong>{ev.citation}</strong></td><td>{ev.source}<br/><span>{ev.module}</span></td><td><strong>{ev.title}</strong><br/><span>{ev.summary}</span></td><td><span className={severityClass(ev.severity)}>{ev.severity}</span></td><td>{fmtDate(ev.event_time)}</td><td>{proofUrl(ev) ? <a onClick={e => e.stopPropagation()} href={proofUrl(ev)} target="_blank" rel="noreferrer"><ExternalLink size={15}/></a> : '-'}</td></tr>)}</tbody></table></div> : <div className="empty-state">현재 live 조회 범위에서 정규화된 외부 evidence가 없습니다. 내부 로그 검증을 조건으로 decision gate를 검토하세요.</div>}
+    {evidence.length ? <div className="table-scroll"><table className="matrix"><thead><tr><th>ID</th><th>Source</th><th>Finding</th><th>Severity</th><th>Time</th><th>Link</th></tr></thead><tbody>{evidence.map(ev => <tr key={ev.id} onClick={() => onSelect(ev)} className={selected?.id === ev.id ? 'selected-row' : ''}><td><strong>{ev.citation}</strong></td><td>{ev.source}<br/><span>{ev.module}</span></td><td><strong>{ev.title}</strong><br/><span>{ev.summary}</span></td><td><span className={severityClass(ev.severity)}>{ev.severity}</span></td><td>{fmtDate(ev.event_time)}</td><td>{proofUrl(ev) ? <a onClick={e => e.stopPropagation()} href={proofUrl(ev)} target="_blank" rel="noreferrer"><ExternalLink size={15}/></a> : '-'}</td></tr>)}</tbody></table></div> : <div className="empty-state">현재 live 조회 범위에서 정규화된 외부 evidence가 없습니다. 내부 로그 검증을 조건으로 mission gate를 검토하세요.</div>}
   </section>
 }
 
 function DetailPanel({ detail }: { detail: Detail }) {
   return <section className="panel detail-panel">
-    <div className="panel-index">08</div>
+    <div className="panel-index">10</div>
     <div className="panel-header"><h2><FileText size={18}/> Detail</h2></div>
     {!detail ? <div className="empty-state">Evidence 또는 action 행을 선택하세요.</div> : detail.kind === 'evidence' ? <EvidenceDetail ev={detail.item}/> : <ActionDetail action={detail.item}/>}
   </section>
@@ -242,7 +277,7 @@ function MissionGraph({ nodes, edges }: { nodes: GraphNode[]; edges: GraphEdge[]
 }
 function GraphPanel({ result }: { result: InvestigationResult }) {
   return <section className="panel graph-panel">
-    <div className="panel-index">09</div>
+    <div className="panel-index">11</div>
     <div className="panel-header"><h2><GitBranch size={18}/> Mission graph</h2></div>
     <MissionGraph nodes={result.graph.nodes} edges={result.graph.edges}/>
   </section>
@@ -250,7 +285,7 @@ function GraphPanel({ result }: { result: InvestigationResult }) {
 
 function Timeline({ result }: { result: InvestigationResult }) {
   return <section className="panel timeline-panel">
-    <div className="panel-index">10</div>
+    <div className="panel-index">12</div>
     <div className="panel-header"><h2><Clock size={18}/> Timeline</h2></div>
     {result.timeline.length ? <div className="timeline-list">{result.timeline.map(t => <div className="time-item" key={t.id}><time>{fmtDate(t.time)}</time><strong>{t.title}</strong><p>{t.summary}</p></div>)}</div> : <div className="empty-state">시간 정보가 있는 이벤트가 없습니다.</div>}
   </section>
@@ -258,7 +293,7 @@ function Timeline({ result }: { result: InvestigationResult }) {
 
 function ControlsPanel({ result }: { result: InvestigationResult }) {
   return <section className="panel controls-panel">
-    <div className="panel-index">11</div>
+    <div className="panel-index">13</div>
     <div className="panel-header"><h2><CheckCircle2 size={18}/> Required controls</h2></div>
     <ul className="control-list">{result.decision_gate.required_controls.map((c, i) => <li key={i}><ArrowRight size={15}/>{c}</li>)}</ul>
   </section>
@@ -278,7 +313,7 @@ function App() {
   const selectedEvidence = detail?.kind === 'evidence' ? detail.item : undefined
   const selectedAction = detail?.kind === 'action' ? detail.item : undefined
 
-  return <div className="app"><Topbar/><CommandPanel onRun={run} loading={loading}/>{error && <div className="error">{error}</div>}{!result && !loading && <div className="start-state">실제 사이트 주소를 입력하세요. 예: www.google.com — 사이트 주소만 입력하면 기본 출시 전 점검으로 자동 확장됩니다.</div>}{result && <main className="result-grid"><DecisionGate result={result}/><MissionContext result={result}/><TargetSurface result={result}/><ExecutiveBrief result={result}/><SourceStatus result={result}/><ActionBoard actions={result.action_board} selected={selectedAction} onSelect={item => setDetail({kind:'action', item})}/><EvidenceTable evidence={result.evidence} selected={selectedEvidence} onSelect={item => setDetail({kind:'evidence', item})}/><DetailPanel detail={detail}/><GraphPanel result={result}/><Timeline result={result}/><ControlsPanel result={result}/></main>}</div>
+  return <div className="app"><Topbar/><CommandPanel onRun={run} loading={loading}/>{error && <div className="error">{error}</div>}{!result && !loading && <div className="start-state">실제 사이트 주소를 입력하세요. 예: defense-supplier.co.kr — 사이트 주소만 입력하면 기본 연합훈련 전 Mission Exposure Gate로 자동 확장됩니다.</div>}{result && <main className="result-grid"><DecisionGate result={result}/><MissionContext result={result}/><TargetSurface result={result}/><ExecutiveBrief result={result}/><SourceStatus result={result}/><MilitaryDeployability result={result}/><StandardsPanel result={result}/><ActionBoard actions={result.action_board} selected={selectedAction} onSelect={item => setDetail({kind:'action', item})}/><EvidenceTable evidence={result.evidence} selected={selectedEvidence} onSelect={item => setDetail({kind:'evidence', item})}/><DetailPanel detail={detail}/><GraphPanel result={result}/><Timeline result={result}/><ControlsPanel result={result}/></main>}</div>
 }
 
 createRoot(document.getElementById('root')!).render(<App />)

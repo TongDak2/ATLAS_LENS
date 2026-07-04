@@ -1,6 +1,6 @@
 # Security and Governance
 
-Atlas Lens is intended for authorized defensive analysis and business risk decision support. It does not perform exploitation or intrusive testing.
+Atlas Lens is intended for authorized defensive mission-assurance analysis. It does not perform exploitation, intrusive testing, or attack automation.
 
 ## Non-goals
 
@@ -11,7 +11,7 @@ Atlas Lens does not:
 - create working unauthorized credentials
 - mutate upstream CTI data
 - display raw passwords by default
-- replace analyst judgment or business owner approval
+- replace analyst judgment, SOC validation, or Mission Owner approval
 
 ## Safety controls
 
@@ -28,7 +28,7 @@ Atlas Lens does not:
    - password, token, secret, cookie, and credential-like values are masked.
 
 4. **Evidence-first output**
-   - decision gates, action items, and executive briefs cite evidence IDs when evidence exists.
+   - mission gates, action items, and briefs cite evidence IDs when evidence exists.
    - lack of external evidence is treated as an uncertainty, not proof of safety.
 
 5. **Untrusted external content**
@@ -39,10 +39,10 @@ Atlas Lens does not:
    - recommended operational deployment should log:
      - query
      - authenticated caller
-     - decision gate
+     - mission decision gate
      - evidence used
      - action board generated
-     - export events
+     - STIX/TAXII export events
 
 ## Production deployment considerations
 
@@ -53,4 +53,4 @@ Atlas Lens does not:
 - integrate with SOC/IAM/EDR/SIEM validation workflows
 - store evidence according to internal data classification policy
 - keep mock/test data disabled in operational mode
-- require business owner approval before accepting residual risk for launches, deals, vendors, or customer trust responses
+- require Mission Owner approval before accepting residual risk for exercises, operations, defense supplier connections, portal releases, or incident claim decisions

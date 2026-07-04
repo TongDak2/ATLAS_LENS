@@ -38,7 +38,7 @@ _RATE_BUCKETS.clear()
 client = TestClient(app)
 headers = {'X-Atlas-API-Key': settings.atlas_api_key}
 valid_body = {
-    'query': '다음 주 금요일 www.example.com 신규 결제 서비스 출시 전 유출 계정, 감염 단말, 랜섬웨어 언급, 텔레그램 위협 신호를 조사하고 Go/No-Go 판단과 72시간 액션 플랜을 만들어줘.',
+    'query': '다음 주 연합훈련 전 defense-supplier.co.kr 관련 유출 계정, 감염 단말, 랜섬웨어 언급, 텔레그램 위협 신호를 조사하고 Mission GO/NO-GO 판단과 72시간 조치 계획을 만들어줘.',
     'live': False,
     'classification': 'UNCLASSIFIED//CTI',
     'max_results_per_source': 5,
@@ -73,31 +73,34 @@ _RATE_BUCKETS.clear()
 
 q = valid_body['query']
 entities = extract_entities(q)
-assert any(e.type == 'domain' and e.value == 'example.com' for e in entities), entities
+assert any(e.type == 'domain' and e.value == 'defense-supplier.co.kr' for e in entities), entities
 plan = build_plan(entities, 5, q)
 assert [p.module for p in plan] == ['CL', 'CB', 'CDS', 'LM', 'RM', 'TT'], [p.module for p in plan]
 res = client.post('/api/investigate', headers=headers, json=valid_body)
 assert res.status_code == 200, res.text
 body = res.json()
 assert body['product'] == 'Atlas Lens'
-assert body['mission_context']['mission_type'] == 'product_launch', body['mission_context']
+assert body['mission_context']['mission_type'] == 'joint_training', body['mission_context']
 assert body['decision_gate']['decision'] in {'GO', 'GO_WITH_CONTROLS', 'NO_GO'}, body['decision_gate']
 assert len(body['action_board']) >= 4, body['action_board']
-assert body['target_profile']['display'] == 'example.com', body['target_profile']
+assert body['target_profile']['display'] == 'defense-supplier.co.kr', body['target_profile']
 assert body['target_profile']['query_was_expanded'] is False, body['target_profile']
 assert len(body['evidence']) == 0
 assert body['report']['recommended_actions']
+assert body['deployability']['deployment_locations'], body['deployability']
+assert 'stix_bundle' in body['standards'], body['standards']
+assert body['decision_gate']['label'].startswith('MISSION '), body['decision_gate']
 
-bare = dict(valid_body, query='google.com')
+bare = dict(valid_body, query='c2-training.example.mil')
 res = client.post('/api/investigate', headers=headers, json=bare)
 assert res.status_code == 200, res.text
 body = res.json()
-assert body['mission_context']['mission_type'] == 'product_launch', body['mission_context']
+assert body['mission_context']['mission_type'] == 'joint_training', body['mission_context']
 assert body['target_profile']['query_was_expanded'] is True, body['target_profile']
-assert body['query'].startswith('google.com 신규 결제 서비스 출시 전'), body['query']
-assert [p['module'] for p in body['plan']] == ['CL', 'CB', 'CDS', 'LM', 'RM', 'TT'], body['plan']
-norm = normalize_query('google.com 관련 조사')
-assert norm.default_mission_applied is True and norm.query.startswith('google.com 신규 결제 서비스 출시 전'), norm
+assert body['query'].startswith('c2-training.example.mil 연합훈련 전'), body['query']
+assert [p['module'] for p in body['plan']] == ['CL', 'CB', 'CDS', 'LM', 'GM', 'RM', 'TT'], body['plan']
+norm = normalize_query('defense-supplier.co.kr 관련 조사')
+assert norm.default_mission_applied is True and norm.query.startswith('defense-supplier.co.kr 연합훈련 전'), norm
 
 assert not has_investigable_target('hello')
 invalid_target = dict(valid_body, query='hello')
@@ -105,7 +108,7 @@ res = client.post('/api/investigate', headers=headers, json=invalid_target)
 assert res.status_code == 422, res.text
 assert 'domain' in str(res.json()).lower() and 'ip' in str(res.json()).lower(), res.text
 
-oversized_query = dict(valid_body, query='www.example.com ' + 'A' * 2100)
+oversized_query = dict(valid_body, query='defense-supplier.co.kr ' + 'A' * 2100)
 assert client.post('/api/investigate', headers=headers, json=oversized_query).status_code == 422
 huge_window = dict(valid_body, time_window_days=999999999999999999999)
 assert client.post('/api/investigate', headers=headers, json=huge_window).status_code == 422

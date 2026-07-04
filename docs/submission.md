@@ -1,35 +1,33 @@
-# Submission
+# Submission Summary
 
-## Project Title
+## Project title
 
-Atlas Lens
+ATLAS LENS — Mission Exposure Decision Gate
 
 ## Track
 
-T2 / 범용 / 멀티소스 융합 인텔 코파일럿 — Fusion Intel Copilot
+멀티소스 융합 인텔 코파일럿 / Fusion Intel Copilot
 
-## Short Description
+## Description
 
-Atlas Lens is a Business-Moment Threat Intelligence Copilot. It takes a natural-language query about a product launch, vendor onboarding, M&A review, customer trust response, or incident pre-check, orchestrates multi-source CTI modules, and turns cited evidence into a GO / GO WITH CONTROLS / NO-GO decision gate with a 72-hour action board.
+Atlas Lens is a mission exposure intelligence copilot. It takes a natural-language query about a joint exercise, operation support event, defense supplier connection, command portal release, or incident claim; orchestrates multi-source CTI modules; and turns cited evidence into a MISSION GO / MISSION GO WITH CONTROLS / MISSION NO-GO decision gate with a 72-hour Mission Assurance Board.
 
-## Long Description
+## Why it fits the problem
 
-Current threat intelligence is fragmented across leaked credentials, stealer logs, ransomware monitoring, Telegram channels, and other OSINT sources. Existing tools often stop at search, summarization, or generic risk scoring. Atlas Lens goes further: it maps external exposure to a concrete business moment and tells teams whether they can launch, sign, acquire, announce, or respond — and under which controls.
+Threat intelligence is fragmented across credential leaks, stealer datasets, ransomware monitoring, leaked monitoring, and Telegram channels. Atlas Lens reduces analyst cross-checking time by turning scattered indicators into a mission decision, required controls, and auditable evidence.
 
-The system produces a Mission Context, Evidence Matrix with mandatory citations, Risk/Confidence score, Exposure DNA, Decision Gate, 72-hour Action Board, Mission Graph, Timeline, and Executive Brief.
+## Military deployability
 
-## Differentiator
+- Deployable in an internet-connected CTI analysis network, SOC, cyber operations center, mission assurance review workflow, or defense supplier assessment workflow.
+- Requires app-level API authentication, gateway control, redaction, rate limiting, and analyst review.
+- Does not provide exploit or intrusion automation.
+- Requires internal IAM/EDR/SIEM validation before any mission decision is finalized.
 
-Atlas Lens does not ask only “what was found?” It asks:
+## Technical differentiation
 
-> Is it safe to proceed with this business moment, and what controls must be completed first?
-
-## GitHub Repository
-
-https://github.com/TongDak2/ATLAS_LENS
-
-## Optional materials
-
-- Demo URL
-- Demo video
-- Screenshots
+- Natural-language mission query normalization.
+- Multi-source CTI module planning and execution.
+- Evidence-first Mission GO/NO-GO gate.
+- Military Deployability Panel.
+- MITRE ATT&CK mapping.
+- STIX 2.1-style bundle output for TAXII/internal CTI repository handoff.

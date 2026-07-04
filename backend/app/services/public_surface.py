@@ -32,7 +32,7 @@ def build_target_profile(
     )
     if default_mission_applied:
         profile.collection_notes.append(
-            "입력이 사이트 주소 중심이라 기본 업무 시나리오를 '신규 결제 서비스 출시 전 위험 판단'으로 확장했습니다."
+            "입력이 사이트 주소 중심이라 기본 임무 시나리오를 '연합훈련 전 Mission Exposure Gate'로 확장했습니다."
         )
     return profile
 
