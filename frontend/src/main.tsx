@@ -30,10 +30,11 @@ function shortText(value: string, max = 120) {
 function hasInvestigableTarget(query: string) {
   const q = query.trim()
   if (!q) return false
-  const domain = /(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9-]{1,63}(?:\.[a-zA-Z0-9-]{1,63})+\.[a-zA-Z]{2,63}/
+  const url = /https?:\/\/[^\s,;()<>\]\[{}"]+/i
+  const domain = /\b(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63}\b/
   const email = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/
   const ip = /\b(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)\b/
-  return domain.test(q) || email.test(q) || ip.test(q)
+  return url.test(q) || domain.test(q) || email.test(q) || ip.test(q)
 }
 function severityClass(s: Severity | string) { return `severity ${s}` }
 function decisionClass(decision: string) { return `decision ${decision.toLowerCase().replace(/_/g, '-')}` }
