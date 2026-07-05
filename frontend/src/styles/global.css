@@ -92,8 +92,9 @@ a { color: var(--accent); }
 .command-form textarea { min-height: 142px; resize: vertical; line-height: 1.5; }
 .command-form textarea::placeholder, .key-row input::placeholder { color: #4f4f55; font-weight: 700; }
 .command-form textarea:focus, .key-row input:focus { border-color: var(--accent); box-shadow: inset 4px 0 0 var(--accent); background: #fff; }
-.key-row { display: grid; grid-template-columns: 40px 1fr; align-items: stretch; }
-.key-row svg { width: 40px; height: 48px; padding: 11px; color: var(--paper); background: var(--ink); border: 1px solid var(--line-strong); border-right: 0; }
+.key-row { display: grid; grid-template-columns: 48px 1fr; align-items: stretch; }
+.key-row input { height: 48px; }
+.key-row svg { width: 48px; height: 48px; padding: 12px; color: var(--paper); background: var(--ink); border: 1px solid var(--line-strong); border-right: 0; }
 .primary {
   width: fit-content;
   margin-top: 8px;
