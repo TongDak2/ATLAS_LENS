@@ -172,6 +172,15 @@ assert email_json['target_profile']['display'] == 'user@example.mil', email_json
 assert email_json['mission_context']['target'] == 'user@example.mil', email_json['mission_context']
 assert all(p['query'].startswith('email:user@example.mil') or p['module'] == 'TT' for p in email_json['plan']), email_json['plan']
 
+bogus_email = dict(valid_body, query='ollehmy@definitely-not-real-atlas-lens.invalid 관련 유출 계정 조사', live=True, include_public_feeds=True)
+bogus_res = client.post('/api/investigate', headers=headers, json=bogus_email)
+assert bogus_res.status_code == 200, bogus_res.text
+bogus_json = bogus_res.json()
+assert bogus_json['target_profile']['kind'] == 'email', bogus_json['target_profile']
+assert bogus_json['target_profile']['public_surface']['target_verified'] is False, bogus_json['target_profile']
+assert bogus_json['decision_gate']['decision'] == 'GO_WITH_CONTROLS', bogus_json['decision_gate']
+assert '검증되지 않았습니다' in bogus_json['decision_gate']['rationale'], bogus_json['decision_gate']
+
 ip_q = '8.8.8.8 외부 노출 확인'
 ip_entities = extract_entities(ip_q)
 assert [(e.type, e.value) for e in ip_entities if e.type == 'ip'] == [('ip', '8.8.8.8')], ip_entities

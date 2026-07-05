@@ -171,13 +171,34 @@ def build_risk(evidence: list[Evidence]) -> RiskModel:
     )
 
 
-def build_decision_gate(mission: MissionContext, risk: RiskModel, evidence: list[Evidence]) -> DecisionGate:
+def _target_verification_failed(target_profile: TargetProfile) -> bool:
+    surface = target_profile.public_surface or {}
+    return surface.get("target_verified") is False
+
+
+def _cti_collection_incomplete(plan_steps: list[InvestigationPlanStep]) -> bool:
+    live_modules = {"CL", "CB", "CDS", "LM", "GM", "RM", "TT"}
+    cti_steps = [step for step in plan_steps if step.module.upper() in live_modules]
+    if not cti_steps:
+        return False
+    return not any(step.status == "completed" for step in cti_steps)
+
+
+def build_decision_gate(
+    mission: MissionContext,
+    risk: RiskModel,
+    evidence: list[Evidence],
+    target_profile: TargetProfile,
+    plan_steps: list[InvestigationPlanStep],
+) -> DecisionGate:
     risk_ev = actionable_evidence(evidence)
     c = evidence_counts(risk_ev)
     ids = [ev.id for ev in risk_ev[:8]]
     has_stealer = c["stealer_exposure"] > 0
     has_actor = c["ransomware_mention"] + c["leak_mention"] + c["telegram_mention"] > 0
     has_cred = c["credential_exposure"] + c["combo_exposure"] > 0
+    target_unverified = _target_verification_failed(target_profile)
+    cti_incomplete = _cti_collection_incomplete(plan_steps)
 
     if risk.risk_score >= 75 or (has_stealer and has_actor):
         decision = "NO_GO"
@@ -192,6 +213,16 @@ def build_decision_gate(mission: MissionContext, risk: RiskModel, evidence: list
         label = "GO WITH CONTROLS"
         rationale = f"{mission.target} 관련 외부 노출 evidence가 확인되었습니다. 임무 자체를 즉시 중단할 수준으로 단정할 수는 없지만, 조건부 통제와 72시간 모니터링을 전제로 진행해야 합니다."
         blocking = ["필수 IAM/EDR/SOC 확인 항목이 마감 전 완료되지 않을 경우 NO-GO로 재평가"]
+    elif target_unverified:
+        decision = "GO_WITH_CONTROLS"
+        label = "GO WITH CONTROLS"
+        rationale = f"{mission.target} 대상 지표가 공개 DNS 또는 공인 IP 기준에서 검증되지 않았습니다. 외부 노출 evidence가 없다는 사실만으로 GO를 권고할 수 없으므로, 대상 오타·소유권·자산 등록 여부 확인을 조건으로 재평가해야 합니다."
+        blocking = ["대상 도메인, 이메일 도메인 또는 IP가 실제 임무 자산인지 확인되기 전까지 GO로 해석 금지"]
+    elif cti_incomplete:
+        decision = "GO_WITH_CONTROLS"
+        label = "GO WITH CONTROLS"
+        rationale = f"{mission.target}에 대한 CTI 모듈 조회가 완료되지 않았습니다. API 자격 증명, quota, 네트워크 상태를 확인하기 전까지 외부 신호 부재를 안전 상태로 해석할 수 없습니다."
+        blocking = ["CL/CB/CDS/LM/RM/TT 등 핵심 CTI 조회가 최소 1개 이상 정상 완료되어야 GO 재평가 가능"]
     else:
         decision = "GO"
         label = "GO"
@@ -205,6 +236,10 @@ def build_decision_gate(mission: MissionContext, risk: RiskModel, evidence: list
         controls.append("감염 단말 후보의 EDR/MDM/CMDB 매칭과 브라우저 저장 credential 정책 점검")
     if has_actor:
         controls.append("랜섬웨어·유출·텔레그램 watch 키워드 등록과 72시간 SOC 모니터링")
+    if target_unverified:
+        controls.append("대상 지표 오타, 도메인 소유권, 이메일 도메인 존재 여부, CMDB/자산 등록 여부 확인")
+    if cti_incomplete:
+        controls.append("StealthMole/API 인증, quota, 네트워크 상태 확인 후 동일 query 재조회")
     if not controls:
         controls.extend([
             "임무 전 24시간 SSO/VPN/메일 로그인 이상 징후 확인",
@@ -531,7 +566,7 @@ def assemble_result(
     risk = build_risk(evidence)
     dna = build_exposure_dna(evidence)
     interpretation = build_threat_interpretation(entities, evidence)
-    gate = build_decision_gate(mission, risk, evidence)
+    gate = build_decision_gate(mission, risk, evidence, target_profile, plan_steps)
     actions = build_action_board(mission, evidence, gate)
     deployability = build_deployability_profile(mission)
     standards = build_standards_interop(mission, evidence, target_profile, gate)

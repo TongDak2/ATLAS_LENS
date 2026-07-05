@@ -119,11 +119,13 @@ function TargetSurface({ result }: { result: InvestigationResult }) {
   const status = s.status_code ? String(s.status_code) : s.http_checked ? 'checked' : 'not checked'
   const title = typeof s.title === 'string' && s.title ? s.title : 'not available'
   const ipCount = typeof s.resolved_address_count === 'number' ? String(s.resolved_address_count) : '0'
+  const verification = s.target_verified === true ? 'verified' : s.target_verified === false ? 'not verified' : 'unknown'
   return <section className="panel surface-panel">
     <div className="panel-index">03</div>
     <div className="panel-header"><h2><Globe2 size={18}/> Target surface</h2></div>
     <dl className="context-grid">
       <dt>Target</dt><dd>{p.display || p.value}</dd>
+      <dt>Verification</dt><dd>{verification}</dd>
       <dt>Landing URL</dt><dd>{finalUrl || 'not available'}</dd>
       <dt>HTTP</dt><dd>{status}</dd>
       <dt>Title</dt><dd>{title}</dd>

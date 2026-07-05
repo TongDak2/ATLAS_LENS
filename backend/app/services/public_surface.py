@@ -39,27 +39,48 @@ def build_target_profile(
 
 
 def collect_public_surface(profile: TargetProfile, timeout: float = 4.0) -> TargetProfile:
-    """Collect a small, safe public footprint for domain targets.
+    """Collect a small, safe public footprint for concrete indicators.
 
     This is not a vulnerability scan. It only resolves DNS and performs one
-    normal HTTPS/HTTP page fetch for public, globally routable domains so the
-    report can be tied to the actual site instead of a generic template.
+    normal HTTPS/HTTP page fetch for public, globally routable domains. Email
+    targets verify their domain. IP targets are checked for global routability.
     """
-    if profile.kind != "domain" or not profile.value:
-        profile.collection_notes.append("공개 웹 표면 수집은 도메인 대상에서만 수행했습니다.")
+    if not profile.value:
+        profile.collection_notes.append("검증할 대상 지표가 없어 공개 표면 수집을 건너뛰었습니다.")
         return profile
 
-    domain = profile.value.lower().strip()
+    if profile.kind == "ip":
+        profile.public_surface = _verify_ip_surface(profile.value)
+        if profile.public_surface.get("target_verified"):
+            profile.collection_notes.append("입력 IP가 공인 라우팅 가능한 주소로 확인되었습니다.")
+        else:
+            profile.collection_notes.append("입력 IP가 공인 라우팅 가능한 주소로 확인되지 않아 GO 판단에서 제외했습니다.")
+        return profile
+
+    domain = _domain_for_profile(profile)
+    if not domain:
+        profile.collection_notes.append("도메인 또는 이메일 도메인을 추출하지 못해 대상 검증을 수행하지 못했습니다.")
+        profile.public_surface = {"indicator_kind": profile.kind, "target_verified": False, "verification_status": "no-domain"}
+        return profile
+
     addresses = _resolve_public_addresses(domain)
     surface: dict[str, Any] = {
+        "indicator_kind": profile.kind,
         "domain": domain,
         "resolved_addresses": addresses[:8],
         "resolved_address_count": len(addresses),
+        "target_verified": bool(addresses),
+        "verification_status": "public-dns-resolved" if addresses else "unresolved-public-dns",
         "http_checked": False,
     }
 
     if not addresses:
-        profile.collection_notes.append("도메인이 공인 IP로 해석되지 않아 HTTP 표면 수집을 건너뛰었습니다.")
+        profile.collection_notes.append("대상 도메인이 공인 IP로 해석되지 않아 GO 판단에서 제외했습니다.")
+        profile.public_surface = surface
+        return profile
+
+    if profile.kind == "email":
+        profile.collection_notes.append("이메일 도메인이 공인 DNS로 해석되어 대상 context에 반영했습니다.")
         profile.public_surface = surface
         return profile
 
@@ -78,25 +99,28 @@ def make_public_surface_evidence(profile: TargetProfile, start_index: int = 1) -
     if not surface:
         return []
     eid = f"S{start_index}"
-    domain = str(surface.get("domain") or profile.value or profile.display)
-    final_url = surface.get("final_url") or surface.get("checked_url") or domain
+    indicator_kind = str(surface.get("indicator_kind") or profile.kind)
+    indicator = str(surface.get("domain") or surface.get("ip") or profile.value or profile.display)
+    final_url = surface.get("final_url") or surface.get("checked_url") or indicator
     status = surface.get("status_code", "unknown")
     title = surface.get("title") or "title unavailable"
     address_count = surface.get("resolved_address_count", 0)
+    verified = bool(surface.get("target_verified"))
     summary = (
-        f"공개 사이트 표면 확인: domain={domain}, final_url={final_url}, "
-        f"status={status}, title={title}, public_ip_count={address_count}"
+        f"대상 지표 검증: kind={indicator_kind}, indicator={indicator}, "
+        f"verified={verified}, status={surface.get('verification_status', 'unknown')}, "
+        f"landing={final_url}, http={status}, title={title}, public_ip_count={address_count}"
     )
     return [
         Evidence(
             id=eid,
-            source="Public DNS/HTTP",
+            source="Public DNS/HTTP/IP verification",
             module="PUBLIC",
             evidence_type="public_indicator",
-            title="Public website surface resolved",
+            title="Target indicator verified" if verified else "Target indicator could not be verified",
             summary=summary,
-            query=f"domain:{domain}",
-            confidence=0.62 if surface.get("ok") else 0.45,
+            query=f"{indicator_kind}:{indicator}",
+            confidence=0.62 if verified else 0.35,
             severity="info",
             citation=f"[{eid}]",
             raw_ref=stable_hash(str(surface), prefix="pub"),
@@ -112,6 +136,34 @@ def _primary_target(entities: list[Entity]) -> Entity | None:
     # emits the email domain for enrichment, but the investigation target should
     # remain the email address when that is what the operator typed.
     return next((e for e in entities if e.type in {"email", "domain", "ip"}), entities[0] if entities else None)
+
+
+def _domain_for_profile(profile: TargetProfile) -> str:
+    if profile.kind == "domain":
+        return profile.value.lower().strip()
+    if profile.kind == "email" and "@" in profile.value:
+        return profile.value.rsplit("@", 1)[1].lower().strip()
+    return ""
+
+
+def _verify_ip_surface(value: str) -> dict[str, Any]:
+    try:
+        ip = ipaddress.ip_address(value.strip().strip("[]").split("%", 1)[0])
+    except ValueError:
+        return {
+            "indicator_kind": "ip",
+            "ip": value,
+            "target_verified": False,
+            "verification_status": "invalid-ip",
+            "http_checked": False,
+        }
+    return {
+        "indicator_kind": "ip",
+        "ip": str(ip),
+        "target_verified": bool(ip.is_global),
+        "verification_status": "global-ip" if ip.is_global else "non-public-ip",
+        "http_checked": False,
+    }
 
 
 def _resolve_public_addresses(domain: str) -> list[str]:
