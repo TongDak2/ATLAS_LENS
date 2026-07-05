@@ -149,10 +149,11 @@ function SourceStatus({ result }: { result: InvestigationResult }) {
     <div className="panel-index">05</div>
     <div className="panel-header"><h2><Database size={18}/> Source status</h2></div>
     <div className="source-grid">
-      {result.plan.map(p => <div className="source-card" key={p.id}>
+      {result.plan.map(p => <div className={`source-card ${p.status}`} key={p.id}>
         <div><strong>{p.module}</strong><span>{p.status}</span></div>
         <p title={p.objective}>{shortText(p.objective, 68)}</p>
         <small>{p.query}</small>
+        {p.reason && p.status !== 'completed' && <em title={p.reason}>{shortText(p.reason, 96)}</em>}
       </div>)}
     </div>
   </section>
