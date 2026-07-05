@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from typing import List
 
-from dotenv import load_dotenv
+from dotenv import dotenv_values, load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -49,12 +49,19 @@ class Settings(BaseSettings):
 
     def load_external_stealthmole_env(self) -> None:
         path = Path(self.stealthmole_config_path).expanduser()
-        if path.exists():
-            load_dotenv(path, override=False)
-            self.stealthmole_base_url = os.getenv("STEALTHMOLE_BASE_URL", self.stealthmole_base_url)
-            self.stealthmole_access_key = os.getenv("STEALTHMOLE_ACCESS_KEY", self.stealthmole_access_key)
-            self.stealthmole_secret_key = os.getenv("STEALTHMOLE_SECRET_KEY", self.stealthmole_secret_key)
-            self.atlas_api_key = os.getenv("ATLAS_API_KEY", self.atlas_api_key)
+        if not path.exists():
+            return
+
+        # Project .env may intentionally leave STEALTHMOLE_* empty so secrets can
+        # live outside the repository in ../.stealthmole/.env. Empty project
+        # values must not mask that external secret file.
+        values = {k: v for k, v in dotenv_values(path).items() if v}
+        load_dotenv(path, override=False)
+
+        self.stealthmole_base_url = self.stealthmole_base_url or values.get("STEALTHMOLE_BASE_URL", "")
+        self.stealthmole_access_key = self.stealthmole_access_key or values.get("STEALTHMOLE_ACCESS_KEY", "")
+        self.stealthmole_secret_key = self.stealthmole_secret_key or values.get("STEALTHMOLE_SECRET_KEY", "")
+        self.atlas_api_key = self.atlas_api_key or values.get("ATLAS_API_KEY", "")
 
 
 settings = Settings()
