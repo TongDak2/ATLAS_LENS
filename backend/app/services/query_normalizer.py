@@ -67,11 +67,13 @@ def normalize_query(query: str) -> NormalizedQuery:
 
 
 def _primary_target(entities: list[Entity]) -> str:
-    for typ in ("domain", "email", "ip"):
-        ent = next((e for e in entities if e.type == typ), None)
-        if ent:
-            return ent.display or ent.value
-    return ""
+    # Keep the originally typed concrete indicator as the target. For example,
+    # `user@example.mil` should expand as an email investigation, not as the
+    # derived domain `example.mil`.
+    ent = next((e for e in entities if e.type in {"email", "domain", "ip"}), None)
+    if not ent:
+        return ""
+    return ent.display or ent.value
 
 
 def _needs_default_mission(query: str) -> bool:

@@ -57,7 +57,10 @@ def level_from_score(score: int) -> str:
 
 
 def subject_label(entities: list[Entity]) -> str:
-    return next((e.display or e.value for e in entities if e.type in ["domain", "organization", "email", "ip"]), "Mission Target")
+    # Use the first concrete indicator extracted from the operator query.
+    # This avoids turning an email-focused investigation into a domain-focused
+    # brief just because the email domain is also extracted for enrichment.
+    return next((e.display or e.value for e in entities if e.type in {"email", "domain", "ip", "organization"}), "Mission Target")
 
 
 def build_mission_context(req: InvestigationRequest, entities: list[Entity]) -> MissionContext:

@@ -108,11 +108,10 @@ def make_public_surface_evidence(profile: TargetProfile, start_index: int = 1) -
 
 
 def _primary_target(entities: list[Entity]) -> Entity | None:
-    for typ in ("domain", "email", "ip"):
-        ent = next((e for e in entities if e.type == typ), None)
-        if ent:
-            return ent
-    return entities[0] if entities else None
+    # Preserve the operator's concrete indicator type. Email extraction also
+    # emits the email domain for enrichment, but the investigation target should
+    # remain the email address when that is what the operator typed.
+    return next((e for e in entities if e.type in {"email", "domain", "ip"}), entities[0] if entities else None)
 
 
 def _resolve_public_addresses(domain: str) -> list[str]:

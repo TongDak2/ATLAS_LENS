@@ -145,6 +145,16 @@ email_entities = [(e.type, e.value) for e in extract_entities('user@example.mil 
 assert ('email', 'user@example.mil') in email_entities, email_entities
 assert ('domain', 'example.mil') in email_entities, email_entities
 assert ('domain', 'xample.mil') not in email_entities, email_entities
+email_norm = normalize_query('user@example.mil')
+assert email_norm.default_mission_applied is True and email_norm.query.startswith('user@example.mil 연합훈련 전'), email_norm
+email_body = dict(valid_body, query='user@example.mil 유출 여부')
+email_res = client.post('/api/investigate', headers=headers, json=email_body)
+assert email_res.status_code == 200, email_res.text
+email_json = email_res.json()
+assert email_json['target_profile']['kind'] == 'email', email_json['target_profile']
+assert email_json['target_profile']['display'] == 'user@example.mil', email_json['target_profile']
+assert email_json['mission_context']['target'] == 'user@example.mil', email_json['mission_context']
+assert all(p['query'].startswith('email:user@example.mil') or p['module'] == 'TT' for p in email_json['plan']), email_json['plan']
 
 ip_q = '8.8.8.8 외부 노출 확인'
 ip_entities = extract_entities(ip_q)
@@ -153,6 +163,13 @@ ip_plan = build_plan(ip_entities, 5, ip_q)
 assert ip_plan, 'IP query should produce a plan'
 assert all(step.query == 'ip:8.8.8.8' for step in ip_plan), [step.query for step in ip_plan]
 assert [step.module for step in ip_plan[:2]] == ['CDS', 'LM'], [step.module for step in ip_plan]
+ip_body = dict(valid_body, query=ip_q)
+ip_res = client.post('/api/investigate', headers=headers, json=ip_body)
+assert ip_res.status_code == 200, ip_res.text
+ip_json = ip_res.json()
+assert ip_json['target_profile']['kind'] == 'ip', ip_json['target_profile']
+assert ip_json['target_profile']['display'] == '8.8.8.8', ip_json['target_profile']
+assert all(p['query'] == 'ip:8.8.8.8' for p in ip_json['plan']), ip_json['plan']
 
 # Direct service path remains mock-free for live=false.
 svc_res = Investigator().investigate(InvestigationRequest(**valid_body))
