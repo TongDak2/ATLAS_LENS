@@ -141,6 +141,22 @@ assert redacted['refreshCredential'] == '<redacted>', redacted
 assert redacted['nested']['client_secret'] == '<redacted>', redacted
 assert redacted['email'] == 'ope***@example.mil', redacted
 
+luma_q = 'https://luma.com/2ew4xn7b?locale=ko 관련 유출 계정 조사'
+assert has_investigable_target(luma_q)
+luma_entities = [(e.type, e.value) for e in extract_entities(luma_q)]
+assert ('domain', 'luma.com') in luma_entities, luma_entities
+luma_res = client.post('/api/investigate', headers=headers, json=dict(valid_body, query=luma_q))
+assert luma_res.status_code == 200, luma_res.text
+luma_json = luma_res.json()
+assert luma_json['target_profile']['kind'] == 'domain', luma_json['target_profile']
+assert luma_json['target_profile']['display'] == 'luma.com', luma_json['target_profile']
+assert all(p['query'] == 'domain:luma.com' or p['module'] == 'TT' for p in luma_json['plan']), luma_json['plan']
+
+subdomain_q = 'sub.service.example.co.kr:8443 관련 유출 계정 조사'
+assert has_investigable_target(subdomain_q)
+subdomain_entities = [(e.type, e.value) for e in extract_entities(subdomain_q)]
+assert ('domain', 'sub.service.example.co.kr') in subdomain_entities, subdomain_entities
+
 email_entities = [(e.type, e.value) for e in extract_entities('user@example.mil 유출 여부')]
 assert ('email', 'user@example.mil') in email_entities, email_entities
 assert ('domain', 'example.mil') in email_entities, email_entities
@@ -170,6 +186,15 @@ ip_json = ip_res.json()
 assert ip_json['target_profile']['kind'] == 'ip', ip_json['target_profile']
 assert ip_json['target_profile']['display'] == '8.8.8.8', ip_json['target_profile']
 assert all(p['query'] == 'ip:8.8.8.8' for p in ip_json['plan']), ip_json['plan']
+
+ipv6_q = '2001:4860:4860::8888 외부 노출 확인'
+assert has_investigable_target(ipv6_q)
+ipv6_entities = extract_entities(ipv6_q)
+assert [(e.type, e.value) for e in ipv6_entities if e.type == 'ip'] == [('ip', '2001:4860:4860::8888')], ipv6_entities
+ipv6_plan = build_plan(ipv6_entities, 5, ipv6_q)
+assert ipv6_plan and all(step.query == 'ip:2001:4860:4860::8888' for step in ipv6_plan), [step.query for step in ipv6_plan]
+ipv6_url_entities = [(e.type, e.value) for e in extract_entities('https://[2001:4860:4860::8888]/status 관련 조사')]
+assert ('ip', '2001:4860:4860::8888') in ipv6_url_entities, ipv6_url_entities
 
 # Direct service path remains mock-free for live=false.
 svc_res = Investigator().investigate(InvestigationRequest(**valid_body))

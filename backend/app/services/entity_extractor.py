@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ipaddress
 import re
 from urllib.parse import urlparse
 
@@ -7,14 +8,17 @@ from app.models import Entity
 
 DOMAIN_RE = re.compile(r"(?<![A-Za-z0-9._%+@-])(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63}(?![A-Za-z0-9-])")
 EMAIL_RE = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b")
-IP_RE = re.compile(r"\b(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)\b")
+IPV4_RE = re.compile(r"\b(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)\b")
+IPV6_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9])(?:\[[0-9A-Fa-f:.%]+\]|[0-9A-Fa-f]{0,4}:[0-9A-Fa-f:.%]{2,})(?![A-Za-z0-9])")
+IP_RE = re.compile(rf"{IPV4_RE.pattern}|{IPV6_CANDIDATE_RE.pattern}")
 CVE_RE = re.compile(r"\bCVE-\d{4}-\d{4,7}\b", re.I)
-URL_RE = re.compile(r"https?://[^\s,;()<>\]\[{}\"]+", re.I)
+URL_RE = re.compile(r"https?://[^\s,;()<>{}\"]+", re.I)
 
 def _strip_known_indicators(text: str) -> str:
     """Blank indicators that have dedicated parsers before generic domain scanning."""
     text = re.sub(URL_RE, " ", text)
     text = re.sub(EMAIL_RE, " ", text)
+    text = re.sub(IP_RE, " ", text)
     return text
 
 
@@ -26,7 +30,7 @@ def has_investigable_target(query: str) -> bool:
     """
     if not query or not query.strip():
         return False
-    if URL_RE.search(query) or EMAIL_RE.search(query) or IP_RE.search(query):
+    if URL_RE.search(query) or EMAIL_RE.search(query) or _extract_ips(query):
         return True
     return bool(DOMAIN_RE.search(_strip_known_indicators(query)))
 
@@ -38,14 +42,49 @@ def canonical_domain(value: str) -> str:
     return value
 
 
+def canonical_ip(value: str) -> str:
+    value = value.strip().strip("[]").split("%", 1)[0]
+    return str(ipaddress.ip_address(value))
+
+
+def clean_url(value: str) -> str:
+    value = value.strip().rstrip(".,;:!?")
+    if value.endswith("]") and "[" not in value[:-1]:
+        value = value[:-1]
+    return value
+
+
+def _extract_ips(text: str) -> list[str]:
+    out: list[str] = []
+    for candidate in IP_RE.findall(text):
+        try:
+            ip = canonical_ip(candidate)
+        except ValueError:
+            continue
+        if ip not in out:
+            out.append(ip)
+    return out
+
+
+def _add_host_entity(found: dict[tuple[str, str], Entity], host: str, confidence: float = 0.96) -> None:
+    host = host.strip().strip("[]")
+    try:
+        ip = canonical_ip(host)
+    except ValueError:
+        domain = canonical_domain(host)
+        if DOMAIN_RE.fullmatch(domain):
+            found.setdefault(("domain", domain), Entity(type="domain", value=domain, display=domain, confidence=confidence))
+        return
+    found.setdefault(("ip", ip), Entity(type="ip", value=ip, display=ip, confidence=confidence))
+
+
 def extract_entities(query: str) -> list[Entity]:
     found: dict[tuple[str, str], Entity] = {}
 
     for url in URL_RE.findall(query):
-        parsed = urlparse(url)
-        if parsed.netloc:
-            domain = canonical_domain(parsed.netloc.split(":")[0])
-            found.setdefault(("domain", domain), Entity(type="domain", value=domain, display=domain, confidence=0.96))
+        parsed = urlparse(clean_url(url))
+        if parsed.hostname:
+            _add_host_entity(found, parsed.hostname, confidence=0.96)
 
     for email in EMAIL_RE.findall(query):
         found[("email", email.lower())] = Entity(type="email", value=email.lower(), display=email.lower(), confidence=0.98)
@@ -58,7 +97,7 @@ def extract_entities(query: str) -> list[Entity]:
         if not d.startswith("cve-"):
             found.setdefault(("domain", d), Entity(type="domain", value=d, display=d, confidence=0.92))
 
-    for ip in IP_RE.findall(query):
+    for ip in _extract_ips(query):
         found[("ip", ip)] = Entity(type="ip", value=ip, display=ip, confidence=0.95)
 
     for cve in CVE_RE.findall(query):

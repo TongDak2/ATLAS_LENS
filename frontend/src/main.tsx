@@ -30,11 +30,12 @@ function shortText(value: string, max = 120) {
 function hasInvestigableTarget(query: string) {
   const q = query.trim()
   if (!q) return false
-  const url = /https?:\/\/[^\s,;()<>\]\[{}"]+/i
+  const url = /https?:\/\/[^\s,;()<>{}"]+/i
   const domain = /\b(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63}\b/
   const email = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/
-  const ip = /\b(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)\b/
-  return url.test(q) || domain.test(q) || email.test(q) || ip.test(q)
+  const ipv4 = /\b(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)\b/
+  const ipv6 = /(^|[^A-Za-z0-9])\[?(?:[0-9A-Fa-f]{0,4}:){2,}[0-9A-Fa-f:.%]*\]?(?=$|[^A-Za-z0-9])/
+  return url.test(q) || domain.test(q) || email.test(q) || ipv4.test(q) || ipv6.test(q)
 }
 function severityClass(s: Severity | string) { return `severity ${s}` }
 function decisionClass(decision: string) { return `decision ${decision.toLowerCase().replace(/_/g, '-')}` }
