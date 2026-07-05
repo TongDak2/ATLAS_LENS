@@ -159,20 +159,6 @@ function SourceStatus({ result }: { result: InvestigationResult }) {
   </section>
 }
 
-function MilitaryDeployability({ result }: { result: InvestigationResult }) {
-  const d = result.deployability
-  return <section className="panel deploy-panel">
-    <div className="panel-index">06</div>
-    <div className="panel-header"><h2><ShieldCheck size={18}/> Military deployability</h2></div>
-    <div className="deploy-grid">
-      <div><strong>Deployment locations</strong><ul>{d.deployment_locations.slice(0, 3).map((x, i) => <li key={i}>{shortText(x, 96)}</li>)}</ul></div>
-      <div><strong>Security controls</strong><ul>{d.security_controls.slice(0, 3).map((x, i) => <li key={i}>{shortText(x, 96)}</li>)}</ul></div>
-      <div><strong>Operational limitations</strong><ul>{d.operational_limitations.slice(0, 3).map((x, i) => <li key={i}>{shortText(x, 96)}</li>)}</ul></div>
-      <div><strong>Integration points</strong><ul>{d.integration_points.slice(0, 3).map((x, i) => <li key={i}>{shortText(x, 96)}</li>)}</ul></div>
-    </div>
-  </section>
-}
-
 function StandardsPanel({ result }: { result: InvestigationResult }) {
   const s = result.standards
   const objectCount = Array.isArray(s.stix_bundle?.objects) ? s.stix_bundle.objects.length : 0
@@ -364,7 +350,7 @@ function App() {
   const selectedEvidence = detail?.kind === 'evidence' ? detail.item : undefined
   const selectedAction = detail?.kind === 'action' ? detail.item : undefined
 
-  return <div className="app"><Topbar/><CommandPanel onRun={run} loading={loading}/>{error && <div className="error">{error}</div>}{!result && !loading && <div className="start-state">실제 사이트 주소를 입력하세요. 예: defense-supplier.co.kr — 사이트 주소만 입력하면 기본 연합훈련 전 Mission Exposure Gate로 자동 확장됩니다.</div>}{result && <main className="result-grid"><DecisionGate result={result}/><GraphPanel result={result}/><TargetSurface result={result}/><ExecutiveBrief result={result}/><SourceStatus result={result}/><MilitaryDeployability result={result}/><StandardsPanel result={result}/><ActionBoard actions={result.action_board} selected={selectedAction} onSelect={item => setDetail({kind:'action', item})}/><EvidenceTable evidence={result.evidence} selected={selectedEvidence} onSelect={item => setDetail({kind:'evidence', item})}/><DetailPanel detail={detail}/><Timeline result={result}/><ControlsPanel result={result}/></main>}</div>
+  return <div className="app"><Topbar/><CommandPanel onRun={run} loading={loading}/>{error && <div className="error">{error}</div>}{!result && !loading && <div className="start-state">실제 사이트 주소를 입력하세요. 예: defense-supplier.co.kr — 사이트 주소만 입력하면 기본 연합훈련 전 Mission Exposure Gate로 자동 확장됩니다.</div>}{result && <main className="result-grid"><DecisionGate result={result}/><GraphPanel result={result}/><TargetSurface result={result}/><ExecutiveBrief result={result}/><SourceStatus result={result}/><StandardsPanel result={result}/><ActionBoard actions={result.action_board} selected={selectedAction} onSelect={item => setDetail({kind:'action', item})}/><EvidenceTable evidence={result.evidence} selected={selectedEvidence} onSelect={item => setDetail({kind:'evidence', item})}/><DetailPanel detail={detail}/><Timeline result={result}/><ControlsPanel result={result}/></main>}</div>
 }
 
 createRoot(document.getElementById('root')!).render(<App />)

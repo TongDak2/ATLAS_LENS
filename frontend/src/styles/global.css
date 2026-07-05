@@ -145,7 +145,6 @@ a { color: var(--accent); }
 .surface-panel { grid-column: span 8; }
 .brief-panel { grid-column: span 12; }
 .source-panel { grid-column: span 12; }
-.deploy-panel { grid-column: span 7; }
 .standards-panel { grid-column: span 5; }
 .action-panel { grid-column: span 7; }
 .evidence-panel { grid-column: span 8; }
@@ -196,10 +195,7 @@ a { color: var(--accent); }
 .source-card.failed span { color: #B42318; }
 .source-card.completed span { color: var(--blue); }
 
-.deploy-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--line-strong); border-left: 1px solid var(--line-strong); }
-.deploy-grid > div { padding: 12px; border-right: 1px solid var(--line-strong); border-bottom: 1px solid var(--line-strong); min-height: 142px; }
-.deploy-grid strong, .mapping-list strong { display: block; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; }
-.deploy-grid ul { margin: 10px 0 0; padding-left: 18px; color: var(--muted); line-height: 1.35; font-size: 13px; }
+.mapping-list strong { display: block; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; }
 .standards-summary { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line-strong); border-left: 1px solid var(--line-strong); margin-bottom: 14px; }
 .standards-summary div { padding: 14px; border-right: 1px solid var(--line-strong); border-bottom: 1px solid var(--line-strong); }
 .standards-summary span { display: block; color: var(--muted); font-size: 11px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
@@ -468,7 +464,7 @@ a { color: var(--accent); }
   .topbar, .command-panel, .decision-wrap { grid-template-columns: 1fr; }
   .section-index, .decision-number { border-right: 0; padding-bottom: 0; }
   .decision, .decision-metrics { border-right: 0; }
-  .context-panel, .surface-panel, .brief-panel, .source-panel, .deploy-panel, .standards-panel, .action-panel, .evidence-panel, .detail-panel, .graph-panel, .timeline-panel, .controls-panel { grid-column: span 12; }
+  .context-panel, .surface-panel, .brief-panel, .source-panel, .standards-panel, .action-panel, .evidence-panel, .detail-panel, .graph-panel, .timeline-panel, .controls-panel { grid-column: span 12; }
   .flow-summary-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .flowchart-track { grid-template-columns: 1fr 24px 1fr 24px 1.2fr 26px 1fr 26px 1fr; }
   .chart-node { min-height: 118px; }
@@ -483,7 +479,7 @@ a { color: var(--accent); }
   .decision strong { font-size: 52px; }
   .decision-metrics { grid-template-columns: 1fr 1fr; }
   .context-grid, .detail-content dl { grid-template-columns: 1fr; }
-  .deploy-grid, .standards-summary { grid-template-columns: 1fr; }
+  .standards-summary { grid-template-columns: 1fr; }
   .flow-summary-strip { grid-template-columns: 1fr; }
   .flowchart { padding: 12px; }
   .flowchart-track { grid-template-columns: 1fr; gap: 8px; }
