@@ -328,10 +328,12 @@ function GraphPanel({ result }: { result: InvestigationResult }) {
 }
 
 function Timeline({ result }: { result: InvestigationResult }) {
+  if (!result.timeline.length) return null
+
   return <section className="panel timeline-panel">
     <div className="panel-index">11</div>
     <div className="panel-header"><h2><Clock size={18}/> Timeline</h2></div>
-    {result.timeline.length ? <div className="timeline-list">{result.timeline.map(t => <div className="time-item" key={t.id}><time>{fmtDate(t.time)}</time><strong>{t.title}</strong><p>{t.summary}</p></div>)}</div> : <div className="empty-state">시간 정보가 있는 이벤트가 없습니다.</div>}
+    <div className="timeline-list">{result.timeline.map(t => <div className="time-item" key={t.id}><time>{fmtDate(t.time)}</time><strong>{t.title}</strong><p>{t.summary}</p></div>)}</div>
   </section>
 }
 
