@@ -10,7 +10,7 @@ ATLAS LENS — Mission Exposure Decision Gate
 
 ## Description
 
-Atlas Lens is a mission exposure intelligence copilot. It takes a natural-language query about a joint exercise, operation support event, defense supplier connection, command portal release, or incident claim; orchestrates multi-source CTI modules; and turns cited evidence into a MISSION GO / MISSION GO WITH CONTROLS / MISSION NO-GO decision gate with a 72-hour Mission Assurance Board.
+Atlas Lens is a mission exposure intelligence copilot. It takes a natural-language query about a joint exercise, operation support event, defense supplier connection, command portal release, or incident claim; orchestrates multi-source CTI modules; and turns cited evidence into a GO / GO WITH CONTROLS / NO-GO decision gate with a 72-hour Mission Assurance Board.
 
 ## Why it fits the problem
 
@@ -27,7 +27,7 @@ Threat intelligence is fragmented across credential leaks, stealer datasets, ran
 
 - Natural-language mission query normalization.
 - Multi-source CTI module planning and execution.
-- Evidence-first Mission GO/NO-GO gate.
+- Evidence-first GO/NO-GO gate.
 - Military Deployability Panel.
 - MITRE ATT&CK mapping.
 - STIX 2.1-style bundle output for TAXII/internal CTI repository handoff.

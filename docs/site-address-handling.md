@@ -5,7 +5,7 @@ Atlas Lens accepts real site addresses and normalizes them into mission investig
 ## Examples
 
 ```text
-다음 주 연합훈련 전 defense-supplier.co.kr 관련 유출 계정, 감염 단말, 랜섬웨어 언급, 텔레그램 위협 신호를 조사하고 Mission GO/NO-GO 판단과 72시간 조치 계획을 만들어줘.
+다음 주 연합훈련 전 defense-supplier.co.kr 관련 유출 계정, 감염 단말, 랜섬웨어 언급, 텔레그램 위협 신호를 조사하고 GO/NO-GO 판단과 72시간 조치 계획을 만들어줘.
 ```
 
 ```text
@@ -24,7 +24,7 @@ Atlas Lens accepts real site addresses and normalizes them into mission investig
 If the input contains only a site address or a low-information request such as `defense-supplier.co.kr`, `defense-supplier.co.kr 관련 조사`, or `https://c2-training.example.mil`, Atlas Lens expands it to the default operational mission:
 
 ```text
-defense-supplier.co.kr 연합훈련 전 유출 계정, 감염 단말, 랜섬웨어 언급, 텔레그램 위협 신호를 조사하고 Mission GO/NO-GO 판단과 72시간 조치 계획을 만들어줘.
+defense-supplier.co.kr 연합훈련 전 유출 계정, 감염 단말, 랜섬웨어 언급, 텔레그램 위협 신호를 조사하고 GO/NO-GO 판단과 72시간 조치 계획을 만들어줘.
 ```
 
 This creates a broad mission-assurance plan: `CL`, `CB`, `CDS`, `LM`, `RM`, and `TT`. If the user already provides a narrower intent, for example `defense-supplier.co.kr 관련 유출 계정 조사`, Atlas Lens keeps the credential-focused plan.

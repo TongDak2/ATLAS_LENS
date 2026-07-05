@@ -39,7 +39,7 @@ _RATE_BUCKETS.clear()
 client = TestClient(app, base_url='http://localhost')
 headers = {'X-Atlas-API-Key': settings.atlas_api_key}
 valid_body = {
-    'query': '다음 주 연합훈련 전 defense-supplier.co.kr 관련 유출 계정, 감염 단말, 랜섬웨어 언급, 텔레그램 위협 신호를 조사하고 Mission GO/NO-GO 판단과 72시간 조치 계획을 만들어줘.',
+    'query': '다음 주 연합훈련 전 defense-supplier.co.kr 관련 유출 계정, 감염 단말, 랜섬웨어 언급, 텔레그램 위협 신호를 조사하고 GO/NO-GO 판단과 72시간 조치 계획을 만들어줘.',
     'live': False,
     'classification': 'UNCLASSIFIED//CTI',
     'max_results_per_source': 5,
@@ -95,7 +95,7 @@ assert len(body['evidence']) == 0
 assert body['report']['recommended_actions']
 assert body['deployability']['deployment_locations'], body['deployability']
 assert 'stix_bundle' in body['standards'], body['standards']
-assert body['decision_gate']['label'].startswith('MISSION '), body['decision_gate']
+assert body['decision_gate']['label'] in {'GO', 'GO WITH CONTROLS', 'NO-GO'}, body['decision_gate']
 
 bare = dict(valid_body, query='c2-training.example.mil')
 res = client.post('/api/investigate', headers=headers, json=bare)

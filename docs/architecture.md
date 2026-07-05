@@ -11,7 +11,7 @@ StealthMole connector and public target profile collector
   ↓
 Evidence normalization and redaction
   ↓
-Risk model and Mission Decision Gate
+Risk model and Decision Gate
   ↓
 72-hour Mission Assurance Board
   ↓
@@ -37,9 +37,9 @@ Atlas Lens classifies mission queries into:
 
 The decision gate returns:
 
-- `MISSION GO`
-- `MISSION GO WITH CONTROLS`
-- `MISSION NO-GO`
+- `GO`
+- `GO WITH CONTROLS`
+- `NO-GO`
 
 The score is driven by actionable evidence: credential exposure, combo exposure, stealer exposure, ransomware mention, leak mention, Telegram mention, and vulnerability pressure. Public surface information is context only.
 

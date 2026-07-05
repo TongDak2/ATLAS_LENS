@@ -9,7 +9,7 @@ from app.services.entity_extractor import DOMAIN_RE, EMAIL_RE, IP_RE, URL_RE, ex
 
 DEFAULT_MISSION_SUFFIX = (
     "연합훈련 전 유출 계정, 감염 단말, 랜섬웨어 언급, 텔레그램 위협 신호를 조사하고 "
-    "Mission GO/NO-GO 판단과 72시간 조치 계획을 만들어줘."
+    "GO/NO-GO 판단과 72시간 조치 계획을 만들어줘."
 )
 
 _MISSION_WORDS = [

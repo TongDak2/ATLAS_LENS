@@ -163,7 +163,7 @@ def build_risk(evidence: list[Evidence]) -> RiskModel:
         breakdown=breakdown,
         assumptions=[
             "외부 OSINT 신호는 내부 침해를 직접 입증하지 않으며, 군 IAM/EDR/SIEM 로그로 검증해야 합니다.",
-            "Mission GO/NO-GO 판단은 기술 evidence와 임무 중요도를 함께 고려한 운영 권고입니다.",
+            "GO/NO-GO 판단은 기술 evidence와 임무 중요도를 함께 고려한 운영 권고입니다.",
         ],
     )
 
@@ -178,7 +178,7 @@ def build_decision_gate(mission: MissionContext, risk: RiskModel, evidence: list
 
     if risk.risk_score >= 75 or (has_stealer and has_actor):
         decision = "NO_GO"
-        label = "MISSION NO-GO"
+        label = "NO-GO"
         rationale = f"{mission.target}에서 감염 단말 또는 위협 생태계 신호가 교차되어, 현재 상태로는 {mission.mission_event} 진행 전 추가 검증과 차단 조치가 필요합니다."
         blocking = [
             "감염 단말 또는 계정 탈취 정황이 실제 군 자산·협력사 자산과 연결되는지 확인되지 않음",
@@ -186,12 +186,12 @@ def build_decision_gate(mission: MissionContext, risk: RiskModel, evidence: list
         ]
     elif risk_ev:
         decision = "GO_WITH_CONTROLS"
-        label = "MISSION GO WITH CONTROLS"
+        label = "GO WITH CONTROLS"
         rationale = f"{mission.target} 관련 외부 노출 evidence가 확인되었습니다. 임무 자체를 즉시 중단할 수준으로 단정할 수는 없지만, 조건부 통제와 72시간 모니터링을 전제로 진행해야 합니다."
-        blocking = ["필수 IAM/EDR/SOC 확인 항목이 마감 전 완료되지 않을 경우 MISSION NO-GO로 재평가"]
+        blocking = ["필수 IAM/EDR/SOC 확인 항목이 마감 전 완료되지 않을 경우 NO-GO로 재평가"]
     else:
         decision = "GO"
-        label = "MISSION GO"
+        label = "GO"
         rationale = f"현재 조회 범위에서 {mission.target}에 대한 정규화된 외부 노출 evidence는 확인되지 않았습니다. 단, 외부 신호 부재는 침해 부재를 입증하지 않으므로 기본 로그 검증을 조건으로 임무 진행이 가능합니다."
         blocking = ["내부 인증 로그 또는 EDR에서 별도 이상 징후가 확인될 경우 재평가"]
 
@@ -258,7 +258,7 @@ def build_deployability_profile(mission: MissionContext) -> DeployabilityProfile
         ],
         operational_limitations=[
             "외부 OSINT 신호는 내부 침해 성공을 증명하지 않음",
-            "Mission GO/NO-GO는 IAM, EDR, SIEM, VPN, Mail audit log 검증과 함께 사용해야 함",
+            "GO/NO-GO는 IAM, EDR, SIEM, VPN, Mail audit log 검증과 함께 사용해야 함",
             "폐쇄망 단독 배포 시 외부 CTI API relay 또는 승인된 중계 구간이 필요함",
             "공격 실행, exploit, 침투 자동화 기능은 제공하지 않음",
         ],
@@ -272,7 +272,7 @@ def build_deployability_profile(mission: MissionContext) -> DeployabilityProfile
         ],
         approval_notes=[
             f"{mission.title} 결과는 임무 담당자와 SOC가 공동 검토해야 합니다.",
-            "MISSION GO WITH CONTROLS 이상은 조치 완료 증적을 mission log에 남기는 것을 권장합니다.",
+            "GO WITH CONTROLS 이상은 조치 완료 증적을 mission log에 남기는 것을 권장합니다.",
         ],
     )
 

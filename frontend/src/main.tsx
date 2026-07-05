@@ -5,7 +5,7 @@ import { investigate } from './lib/api'
 import type { ActionItem, Evidence, InvestigationResult, Severity } from './types/atlas'
 import './styles/global.css'
 
-const exampleQuery = '다음 주 연합훈련 전 defense-supplier.co.kr 관련 유출 계정, 감염 단말, 랜섬웨어 언급, 텔레그램 위협 신호를 조사하고 Mission GO/NO-GO 판단과 72시간 조치 계획을 만들어줘.'
+const exampleQuery = '다음 주 연합훈련 전 defense-supplier.co.kr 관련 유출 계정, 감염 단말, 랜섬웨어 언급, 텔레그램 위협 신호를 조사하고 GO/NO-GO 판단과 72시간 조치 계획을 만들어줘.'
 
 type Detail = { kind: 'evidence'; item: Evidence } | { kind: 'action'; item: ActionItem } | null
 
@@ -71,7 +71,7 @@ function CommandPanel({ onRun, loading }: { onRun: (q: string, apiKey: string) =
     <div className="section-index">00</div>
     <div className="command-copy">
       <h2>Mission first. Evidence next.</h2>
-      <p>사이트·이메일·IP를 입력하면 CTI 조회, Mission GO/NO-GO, 72시간 조치 계획으로 정리합니다.</p>
+      <p>사이트·이메일·IP를 입력하면 CTI 조회, GO/NO-GO, 72시간 조치 계획으로 정리합니다.</p>
       <div className="gate-legend">
         <div><strong>GO</strong><span>외부 노출 신호가 없거나 낮아 기본 로그 확인 후 진행 가능한 상태</span></div>
         <div><strong>GO WITH CONTROLS</strong><span>유출·감염·언급 신호가 있으나 MFA, 세션 폐기, watchlist 등으로 완화 가능한 상태</span></div>
@@ -97,7 +97,7 @@ function DecisionGate({ result }: { result: InvestigationResult }) {
   return <section className="decision-wrap">
     <div className="decision-number">01</div>
     <div className={decisionClass(gate.decision)}>
-      <div className="decision-label">Mission Decision Gate</div>
+      <div className="decision-label">Decision Gate</div>
       <strong>{gate.label}</strong>
       <p title={gate.rationale}>{shortText(gate.rationale, 190)}</p>
     </div>

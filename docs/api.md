@@ -29,7 +29,7 @@ Request:
 
 ```json
 {
-  "query": "다음 주 연합훈련 전 defense-supplier.co.kr 관련 유출 계정, 감염 단말, 랜섬웨어 언급, 텔레그램 위협 신호를 조사하고 Mission GO/NO-GO 판단과 72시간 조치 계획을 만들어줘.",
+  "query": "다음 주 연합훈련 전 defense-supplier.co.kr 관련 유출 계정, 감염 단말, 랜섬웨어 언급, 텔레그램 위협 신호를 조사하고 GO/NO-GO 판단과 72시간 조치 계획을 만들어줘.",
   "time_window_days": 3650,
   "classification": "UNCLASSIFIED//CTI",
   "live": true,
